@@ -1,0 +1,158 @@
+Created At: 2026-10-11T01:10:41+05:30
+Completed At: 2026-10-11T01:10:42+05:30
+File Path: `file:///c:/Synapse/backend/main.py`
+Total Lines: 198
+Total Bytes: 6883
+Showing lines 1 to 150
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: from fastapi import FastAPI, Depends, HTTPException, Query
+2: from fastapi.middleware.cors import CORSMiddleware
+3: from sqlalchemy.orm import Session
+4: from pydantic import BaseModel
+5: from typing import List, Optional, Dict, Any
+6: import json
+7: from datetime import datetime
+8: 
+9: from .database import engine, Base, get_db
+10: from .models import Submission, ComparisonReport
+11: from .similarity_engine import analyze_document_pair, analyze_batch_submissions
+12: 
+13: # Create DB tables
+14: Base.metadata.create_all(bind=engine)
+15: 
+16: app = FastAPI(title="Synapse - AI Plagiarism & Text Similarity API")
+17: 
+18: app.add_middleware(
+19:     CORSMiddleware,
+20:     allow_origins=["*"],
+21:     allow_credentials=True,
+22:     allow_methods=["*"],
+23:     allow_headers=["*"],
+24: )
+25: 
+26: # Schemas
+27: class SubmissionCreate(BaseModel):
+28:     title: str
+29:     author: Optional[str] = "Anonymous"
+30:     content: str
+31: 
+32: class DirectCompareRequest(BaseModel):
+33:     title_a: Optional[str] = "Document A"
+34:     content_a: str
+35:     title_b: Optional[str] = "Document B"
+36:     content_b: str
+37:     drop_common_phrases: Optional[bool] = True
+38:     save_to_history: Optional[bool] = True
+39: 
+40: class BatchItem(BaseModel):
+41:     id: Optional[int] = None
+42:     title: str
+43:     content: str
+44: 
+45: class BatchCompareRequest(BaseModel):
+46:     documents: List[BatchItem]
+47:     drop_common_phrases: Optional[bool] = True
+48: 
+49: class ReviewUpdate(BaseModel):
+50:     status: str
+51:     reviewer_notes: Optional[str] = ""
+52: 
+53: @app.get("/")
+54: def read_root():
+55:     return {"message": "Synapse AI Text Similarity Backend is Running", "status": "active"}
+56: 
+57: @app.post("/api/submissions")
+58: def create_submission(data: SubmissionCreate, db: Session = Depends(get_db)):
+59:     sub = Submission(title=data.title, author=data.author, content=data.content)
+60:     db.add(sub)
+61:     db.commit()
+62:     db.refresh(sub)
+63:     return sub
+64: 
+65: @app.get("/api/submissions")
+66: def get_submissions(db: Session = Depends(get_db)):
+67:     return db.query(Submission).order_by(Submission.created_at.desc()).all()
+68: 
+69: @app.post("/api/compare")
+70: def compare_documents(req: DirectCompareRequest, db: Session = Depends(get_db)):
+71:     if not req.content_a.strip() or not req.content_b.strip():
+72:         raise HTTPException(status_code=400, detail="Both documents must contain text to compare.")
+73:     
+74:     analysis = analyze_document_pair(
+75:         req.content_a, 
+76:         req.content_b, 
+77:         drop_common_phrases=req.drop_common_phrases
+78:     )
+79: 
+80:     report_id = None
+81:     if req.save_to_history:
+82:         report = ComparisonReport(
+83:             doc_a_title=req.title_a,
+84:             doc_b_title=req.title_b,
+85:             overall_similarity=analysis["overall_similarity"],
+86:             exact_similarity=analysis["exact_similarity"],
+87:             semantic_similarity=analysis["semantic_similarity"],
+88:             explanation=analysis["explanation"],
+89:             evidence_json=json.dumps(analysis["evidence"]),
+90:             status="Pending Review"
+91:         )
+92:         db.add(report)
+93:         db.commit()
+94:         db.refresh(report)
+95:         report_id = report.id
+96: 
+97:     return {
+98:         "report_id": report_id,
+99:         "title_a": req.title_a,
+100:         "title_b": req.title_b,
+101:         **analysis
+102:     }
+103: 
+104: @app.post("/api/batch-compare")
+105: def batch_compare(req: BatchCompareRequest, db: Session = Depends(get_db)):
+106:     if len(req.documents) < 2:
+107:         raise HTTPException(status_code=400, detail="Batch requires at least 2 documents.")
+108:     
+109:     doc_dicts = [d.dict() for d in req.documents]
+110:     batch_result = analyze_batch_submissions(doc_dicts, drop_common_phrases=req.drop_common_phrases)
+111: 
+112:     # Save flagged pairs into reports for reviewer queue
+113:     for fp in batch_result.get("flagged_pairs", []):
+114:         report = ComparisonReport(
+115:             doc_a_title=fp["sub_a_title"],
+116:             doc_b_title=fp["sub_b_title"],
+117:             overall_similarity=fp["overall_similarity"],
+118:             exact_similarity=fp["exact_similarity"],
+119:             semantic_similarity=fp["semantic_similarity"],
+120:             explanation=f"{fp['batch_reason']} | {fp['explanation']}",
+121:             evidence_json=json.dumps(fp["evidence"]),
+122:             status="Flagged (Above Batch Avg)"
+123:         )
+124:         db.add(report)
+125:     db.commit()
+126: 
+127:     return batch_result
+128: 
+129: @app.get("/api/reports")
+130: def get_reports(status: Optional[str] = None, db: Session = Depends(get_db)):
+131:     q = db.query(ComparisonReport)
+132:     if status and status != "All":
+133:         q = q.filter(ComparisonReport.status == status)
+134:     reports = q.order_by(ComparisonReport.created_at.desc()).all()
+135:     results = []
+136:     for r in reports:
+137:         results.append({
+138:             "id": r.id,
+139:             "doc_a_title": r.doc_a_title,
+140:             "doc_b_title": r.doc_b_title,
+141:             "overall_similarity": r.overall_similarity,
+142:             "exact_similarity": r.exact_similarity,
+143:             "semantic_similarity": r.semantic_similarity,
+144:             "explanation": r.explanation,
+145:             "evidence": json.loads(r.evidence_json) if r.evidence_json else [],
+146:             "status": r.status,
+147:             "reviewer_notes": r.reviewer_notes,
+148:             "created_at": r.created_at.strftime("%Y-%m-%d %H:%M:%S") if r.created_at else None,
+149:             "reviewed_at": r.reviewed_at.strftime("%Y-%m-%d %H:%M:%S") if r.reviewed_at else None
+150:         })
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

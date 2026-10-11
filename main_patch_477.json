@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Include doc_b_text and comparison details in get_single_report in main.py",
+  "EndLine": 230,
+  "Instruction": "Add doc_b_text to get_single_report endpoint in backend/main.py",
+  "ReplacementContent": "    doc_a = db.query(Submission).filter(Submission.id == r.doc_a_id).first() if r.doc_a_id else None\n    doc_b = db.query(Submission).filter(Submission.id == r.doc_b_id).first() if r.doc_b_id else None\n    evidence_list = json.loads(r.evidence_json) if r.evidence_json else []\n    \n    return {\n        \"id\": r.id,\n        \"doc_a_title\": r.doc_a_title,\n        \"doc_b_title\": r.doc_b_title,\n        \"doc_a_text\": doc_a.content if doc_a else \"\",\n        \"doc_b_text\": doc_b.content if doc_b else \"\",\n        \"overall_similarity\": r.overall_similarity,\n        \"exact_similarity\": r.exact_similarity,\n        \"semantic_similarity\": r.semantic_similarity,\n        \"explanation\": r.explanation,\n        \"evidence\": evidence_list,\n        \"status\": r.status,\n        \"reviewer_notes\": r.reviewer_notes,\n        \"created_at\": r.created_at.strftime(\"%Y-%m-%d %H:%M:%S\") if r.created_at else None,\n        \"reviewed_at\": r.reviewed_at.strftime(\"%Y-%m-%d %H:%M:%S\") if r.reviewed_at else None\n    }",
+  "StartLine": 213,
+  "TargetContent": "    doc_a = db.query(Submission).filter(Submission.id == r.doc_a_id).first() if r.doc_a_id else None\n    evidence_list = json.loads(r.evidence_json) if r.evidence_json else []\n    \n    return {\n        \"id\": r.id,\n        \"doc_a_title\": r.doc_a_title,\n        \"doc_b_title\": r.doc_b_title,\n        \"doc_a_text\": doc_a.content if doc_a else \"\",\n        \"overall_similarity\": r.overall_similarity,\n        \"exact_similarity\": r.exact_similarity,\n        \"semantic_similarity\": r.semantic_similarity,\n        \"explanation\": r.explanation,\n        \"evidence\": evidence_list,\n        \"status\": r.status,\n        \"reviewer_notes\": r.reviewer_notes,\n        \"created_at\": r.created_at.strftime(\"%Y-%m-%d %H:%M:%S\") if r.created_at else None,\n        \"reviewed_at\": r.reviewed_at.strftime(\"%Y-%m-%d %H:%M:%S\") if r.reviewed_at else None\n    }",
+  "TargetFile": "c:\\Synapse\\backend\\main.py",
+  "toolAction": "Adding doc_b_text to single report endpoint",
+  "toolSummary": "Add doc_b_text in get_single_report in main.py"
+}

@@ -1,0 +1,98 @@
+Created At: 2026-10-11T01:11:25+05:30
+Completed At: 2026-10-11T01:11:26+05:30
+File Path: `file:///c:/Synapse/backend/similarity_engine.py`
+Total Lines: 333
+Total Bytes: 14205
+Showing lines 161 to 250
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+161:             "semantic_similarity": 0.0,
+162:             "explanation": "Insufficient unique content after common phrase filtering.",
+163:             "evidence": []
+164:         }
+165: 
+166:     # Document-level exact matching
+167:     exact_score = compute_exact_token_jaccard(text_a, text_b)
+168:     
+169:     # TF-IDF vectors for sentences
+170:     vecs_a, vecs_b = build_tfidf_vectors(sents_a, sents_b)
+171:     
+172:     # Whole doc TF-IDF cosine
+173:     d_vec_a, d_vec_b = build_tfidf_vectors([text_a], [text_b])
+174:     doc_cosine = compute_cosine_similarity(d_vec_a[0], d_vec_b[0])
+175: 
+176:     evidence = []
+177:     matched_a_indices = set()
+178:     matched_b_indices = set()
+179:     semantic_scores_list = []
+180: 
+181:     for idx_a, sent_a in enumerate(sents_a):
+182:         va = vecs_a[idx_a]
+183:         best_b_idx = -1
+184:         best_cosine = 0.0
+185: 
+186:         for idx_b, vb in enumerate(vecs_b):
+187:             c_sim = compute_cosine_similarity(va, vb)
+188:             if c_sim > best_cosine:
+189:                 best_cosine = c_sim
+190:                 best_b_idx = idx_b
+191: 
+192:         if best_b_idx >= 0:
+193:             sent_b = sents_b[best_b_idx]
+194:             seq_ratio = compute_sequence_matcher_ratio(sent_a, sent_b)
+195:             
+196:             # Shared content words (excluding common stop words)
+197:             words_a = extract_content_words(sent_a)
+198:             words_b = extract_content_words(sent_b)
+199:             shared_content = list(words_a & words_b)
+200:             
+201:             match_type = "None"
+202:             effective_score = max(best_cosine, seq_ratio)
+203:             
+204:             # Drop matches that only share 1 trivial word if drop_common_phrases is True
+205:             if drop_common_phrases and len(shared_content) < 2 and seq_ratio < 0.6:
+206:                 continue
+207: 
+208:             if seq_ratio >= 0.70:
+209:                 match_type = "Exact Match"
+210:                 matched_a_indices.add(idx_a)
+211:                 matched_b_indices.add(best_b_idx)
+212:                 semantic_scores_list.append(1.0)
+213:             elif effective_score >= 0.35 and len(words_a) >= 3:
+214:                 match_type = "Paraphrased / Semantic"
+215:                 matched_a_indices.add(idx_a)
+216:                 matched_b_indices.add(best_b_idx)
+217:                 semantic_scores_list.append(effective_score)
+218: 
+219:             if match_type != "None":
+220:                 reason = generate_phrase_explanation(
+221:                     sent_a, sent_b, match_type, effective_score * 100, shared_content
+222:                 )
+223:                 evidence.append({
+224:                     "sentence_a": sent_a,
+225:                     "sentence_b": sent_b,
+226:                     "score": round(effective_score * 100, 1),
+227:                     "type": match_type,
+228:                     "reason": reason,
+229:                     "shared_terms": shared_content,
+230:                     "index_a": idx_a,
+231:                     "index_b": best_b_idx
+232:                 })
+233: 
+234:     avg_match_semantic = (sum(semantic_scores_list) / len(semantic_scores_list)) if semantic_scores_list else 0.0
+235:     semantic_score = float(round((avg_match_semantic * 0.6 + doc_cosine * 0.4) * 100, 1))
+236:     exact_pct = float(round(exact_score * 100, 1))
+237:     
+238:     coverage_ratio = len(matched_a_indices) / max(len(sents_a), 1)
+239:     
+240:     # ML Calibration: Computes dynamic score using weights optimized from reviewer feedback
+241:     coverage_pct = float(round(coverage_ratio * 100, 1))
+242:     ml_pred = ml_model.predict_calibrated_score(exact_pct, semantic_score, coverage_pct)
+243:     overall = ml_pred["ml_calibrated_similarity"]
+244:     overall = min(100.0, max(0.0, overall))
+245: 
+246:     # Formulate review indicator note
+247:     if overall < 15.0:
+248:         verdict_text = "Low similarity detected. Content is distinct and passes independent review."
+249:     elif exact_pct >= 50.0:
+250:         verdict_text = f"High verbatim match ({exact_pct}% lexical overlap). Substantial unoriginal text copied directly."
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,0 +1,119 @@
+Created At: 2026-10-11T03:45:12+05:30
+Completed At: 2026-10-11T03:45:13+05:30
+File Path: `file:///c:/Synapse/backend/main.py`
+Total Lines: 901
+Total Bytes: 35905
+Showing lines 630 to 740
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+630:     pending = sum(1 for r in reports if r.status in ["Pending Review", "pending", "Flagged (Above Batch Avg)", "Under Review", "Evaluator 1", "Evaluator 2", "HOD"])
+631:     cleared = sum(1 for r in reports if r.status in ["Cleared", "cleared"])
+632:     escalated = sum(1 for r in reports if r.status in ["Escalated", "escalated", "Flagged as Copied"])
+633:     officers = db.query(Officer).count()
+634:     
+635:     # 7-day scans distribution
+636:     weekly = [52, 68, 45, 80, 92, 30, max(24, len(reports))]
+637:     return {
+638:         "pending": pending,
+639:         "cleared": cleared,
+640:         "escalated": escalated,
+641:         "officers": officers,
+642:         "weekly": weekly
+643:     }
+644: 
+645: @app.get("/api/admin/queue")
+646: def get_admin_queue(status: Optional[str] = None, db: Session = Depends(get_db)):
+647:     q = db.query(ComparisonReport)
+648:     reports = q.order_by(ComparisonReport.created_at.desc()).all()
+649:     queue = []
+650:     for r in reports:
+651:         raw_status = (r.status or "").lower()
+652:         if "clear" in raw_status:
+653:             mapped_status = "cleared"
+654:         elif "escalat" in raw_status or "copied" in raw_status:
+655:             mapped_status = "escalated"
+656:         else:
+657:             mapped_status = "pending"
+658:             
+659:         if status and status.lower() != "all" and mapped_status != status.lower():
+660:             continue
+661:             
+662:         queue.append({
+663:             "id": r.id,
+664:             "name": f"{r.doc_a_title or 'Doc A'} vs {r.doc_b_title or 'Doc B'}",
+665:             "doc_a_title": r.doc_a_title or "Doc A",
+666:             "doc_b_title": r.doc_b_title or "Doc B",
+667:             "department": getattr(r, "department", "General Studies") or "General Studies",
+668:             "overlap": round(r.overall_similarity, 1),
+669:             "exact_similarity": round(r.exact_similarity, 1),
+670:             "semantic_similarity": round(r.semantic_similarity, 1),
+671:             "status": mapped_status,
+672:             "raw_status": r.status,
+673:             "workflow_stage": getattr(r, "workflow_stage", "Evaluator 1") or "Evaluator 1",
+674:             "evaluator_1_verdict": getattr(r, "evaluator_1_verdict", "Pending") or "Pending",
+675:             "evaluator_1_notes": getattr(r, "evaluator_1_notes", "") or "",
+676:             "evaluator_2_verdict": getattr(r, "evaluator_2_verdict", "Pending") or "Pending",
+677:             "evaluator_2_notes": getattr(r, "evaluator_2_notes", "") or "",
+678:             "hod_verdict": getattr(r, "hod_verdict", "Pending") or "Pending",
+679:             "hod_notes": getattr(r, "hod_notes", "") or "",
+680:             "created_at": r.created_at.strftime("%H:%M:%S") if r.created_at else ""
+681:         })
+682:     return queue
+683: 
+684: @app.post("/api/admin/workflow/{report_id}/action")
+685: def post_workflow_node_action(report_id: int, req: WorkflowNodeAction, db: Session = Depends(get_db)):
+686:     """
+687:     Processes a multi-node governance workflow action.
+688:     Nodes:
+689:       - Evaluator 1: Can vote "Passed" or "Flagged". Advances to Evaluator 2.
+690:       - Evaluator 2: Can vote "Passed" or "Flagged". Advances to HOD.
+691:       - HOD: Final authority board. Can deliver final verdict "Cleared" or "Flagged as Copied".
+692:     """
+693:     report = db.query(ComparisonReport).filter(ComparisonReport.id == report_id).first()
+694:     if not report:
+695:         raise HTTPException(status_code=404, detail="Comparison report not found")
+696: 
+697:     node = req.node.lower()
+698:     if node in ["evaluator_1", "node1"]:
+699:         report.evaluator_1_verdict = req.verdict
+700:         report.evaluator_1_notes = req.notes or f"Evaluator 1 decision: {req.verdict} by {req.actor}"
+701:         report.workflow_stage = "Evaluator 2"
+702:         report.status = "In Review (Evaluator 2)"
+703:         log_action = f"Evaluator 1 voted {req.verdict}"
+704:         icon = "✓" if req.verdict == "Passed" else "⚑"
+705:         color = "var(--green)" if req.verdict == "Passed" else "var(--pink)"
+706: 
+707:     elif node in ["evaluator_2", "node2"]:
+708:         report.evaluator_2_verdict = req.verdict
+709:         report.evaluator_2_notes = req.notes or f"Evaluator 2 decision: {req.verdict} by {req.actor}"
+710:         report.workflow_stage = "HOD"
+711:         report.status = "In Review (HOD)"
+712:         log_action = f"Evaluator 2 voted {req.verdict}"
+713:         icon = "✓" if req.verdict == "Passed" else "⚑"
+714:         color = "var(--green)" if req.verdict == "Passed" else "var(--pink)"
+715: 
+716:     elif node in ["hod", "node3", "head_of_department"]:
+717:         report.hod_verdict = req.verdict
+718:         report.hod_notes = req.notes or f"HOD Final Ruling: {req.verdict} by {req.actor}"
+719:         report.workflow_stage = "Completed"
+720:         report.reviewed_at = datetime.utcnow()
+721:         is_cleared = (req.verdict.lower() == "cleared")
+722:         report.status = "Cleared" if is_cleared else "Flagged as Copied"
+723:         
+724:         # Sync submission status visible to students
+725:         if report.doc_a_id:
+726:             sub_a = db.query(Submission).filter(Submission.id == report.doc_a_id).first()
+727:             if sub_a:
+728:                 sub_a.status = "Cleared" if is_cleared else "Flagged as Misconduct"
+729:         if report.doc_b_id:
+730:             sub_b = db.query(Submission).filter(Submission.id == report.doc_b_id).first()
+731:             if sub_b:
+732:                 sub_b.status = "Cleared" if is_cleared else "Flagged as Misconduct"
+733: 
+734:         log_action = f"HOD Final Ruling: {req.verdict}"
+735:         icon = "✓" if is_cleared else "⚡"
+736:         color = "var(--green)" if is_cleared else "var(--purple)"
+737: 
+738:     else:
+739:         raise HTTPException(status_code=400, detail="Unknown workflow node")
+740: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

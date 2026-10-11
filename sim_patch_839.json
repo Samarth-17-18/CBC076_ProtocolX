@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Pass corpus_templates to analyze_document_pair and batch analysis",
+  "EndLine": 216,
+  "Instruction": "Allow analyze_document_pair to take corpus_templates and pass it into is_predominantly_boilerplate.",
+  "ReplacementContent": "def analyze_document_pair(text_a: str, text_b: str, drop_common_phrases: bool = True, corpus_templates: set = None):\n    sents_a = split_into_sentences(text_a)\n    sents_b = split_into_sentences(text_b)\n\n    # Filter out pure boilerplate sentences and shared assignment templates if drop_common_phrases is enabled\n    if drop_common_phrases:\n        sents_a_filtered = [s for s in sents_a if not is_predominantly_boilerplate(s, corpus_templates=corpus_templates)]\n        sents_b_filtered = [s for s in sents_b if not is_predominantly_boilerplate(s, corpus_templates=corpus_templates)]\n        if sents_a_filtered: sents_a = sents_a_filtered\n        if sents_b_filtered: sents_b = sents_b_filtered",
+  "StartLine": 204,
+  "TargetContent": "def analyze_document_pair(text_a: str, text_b: str, drop_common_phrases: bool = True):\n    sents_a = split_into_sentences(text_a)\n    sents_b = split_into_sentences(text_b)\n\n    # Filter out pure boilerplate sentences if drop_common_phrases is enabled\n    if drop_common_phrases:\n        sents_a_filtered = [s for s in sents_a if not is_predominantly_boilerplate(s)]\n        sents_b_filtered = [s for s in sents_b if not is_predominantly_boilerplate(s)]\n        if sents_a_filtered: sents_a = sents_a_filtered\n        if sents_b_filtered: sents_b = sents_b_filtered",
+  "TargetFile": "c:\\Synapse\\backend\\similarity_engine.py",
+  "toolAction": "Adding corpus_templates parameter to analyze_document_pair",
+  "toolSummary": "Pass corpus_templates into analyze_document_pair in similarity_engine.py"
+}

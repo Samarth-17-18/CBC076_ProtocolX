@@ -1,0 +1,99 @@
+Created At: 2026-10-11T03:45:10+05:30
+Completed At: 2026-10-11T03:45:10+05:30
+File Path: `file:///c:/Synapse/backend/main.py`
+Total Lines: 901
+Total Bytes: 35905
+Showing lines 510 to 600
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+510: 
+511:         sub = Submission(title=filename, author=author, content=text)
+512:         db.add(sub)
+513:         db.commit()
+514:         db.refresh(sub)
+515:         saved_subs.append(sub)
+516: 
+517:     # Multi-file pairwise comparison
+518:     n = len(saved_subs)
+519:     created_reports = []
+520: 
+521:     if n == 1:
+522:         # Compare with existing library
+523:         sub = saved_subs[0]
+524:         existing = db.query(Submission).filter(Submission.id != sub.id).order_by(Submission.created_at.desc()).all()
+525:         if existing:
+526:             target = existing[0]
+527:             analysis = analyze_document_pair(sub.content, target.content, drop_common_phrases=True)
+528:             report = ComparisonReport(
+529:                 doc_a_id=sub.id,
+530:                 doc_b_id=target.id,
+531:                 doc_a_title=sub.title,
+532:                 doc_b_title=target.title,
+533:                 overall_similarity=analysis["overall_similarity"],
+534:                 exact_similarity=analysis["exact_similarity"],
+535:                 semantic_similarity=analysis["semantic_similarity"],
+536:                 explanation=analysis["explanation"],
+537:                 evidence_json=json.dumps(analysis["evidence"]),
+538:                 status="Pending Review" if analysis["overall_similarity"] >= 15.0 else "Cleared"
+539:             )
+540:             db.add(report)
+541:             db.commit()
+542:             db.refresh(report)
+543:             created_reports.append(report)
+544:     else:
+545:         # Batch analysis across all uploaded files
+546:         doc_dicts = [{"id": s.id, "title": s.title, "content": s.content} for s in saved_subs]
+547:         batch_res = analyze_batch_submissions(doc_dicts, drop_common_phrases=True)
+548:         batch_avg = batch_res.get("batch_average_similarity", 0.0)
+549: 
+550:         for pair in batch_res.get("flagged_pairs", []) + batch_res.get("cleared_pairs", []):
+551:             sub_a = next((s for s in saved_subs if s.id == pair["sub_a_id"]), None)
+552:             sub_b = next((s for s in saved_subs if s.id == pair["sub_b_id"]), None)
+553:             
+554:             is_above_avg = pair.get("is_flagged", False)
+555:             status_label = "Flagged (Above Batch Avg)" if is_above_avg else ("Pending Review" if pair["overall_similarity"] >= 15.0 else "Cleared")
+556:             
+557:             report = ComparisonReport(
+558:                 doc_a_id=sub_a.id if sub_a else None,
+559:                 doc_b_id=sub_b.id if sub_b else None,
+560:                 doc_a_title=pair["sub_a_title"],
+561:                 doc_b_title=pair["sub_b_title"],
+562:                 overall_similarity=pair["overall_similarity"],
+563:                 exact_similarity=pair["exact_similarity"],
+564:                 semantic_similarity=pair["semantic_similarity"],
+565:                 explanation=f"{pair.get('batch_reason', '')} | {pair['explanation']}",
+566:                 evidence_json=json.dumps(pair["evidence"]),
+567:                 status=status_label
+568:             )
+569:             db.add(report)
+570:             db.commit()
+571:             db.refresh(report)
+572:             created_reports.append(report)
+573: 
+574:     # Log audit
+575:     audit = AuditLog(
+576:         icon="✂︎",
+577:         color="var(--acid)",
+578:         action=f"Batch processed ({len(files)} docs)",
+579:         detail=f"Compared {len(created_reports)} pairs. Batch Avg: {batch_res.get('batch_average_similarity', 0)}%" if n > 1 else f"Single doc scanned against library",
+580:         actor=author or "User"
+581:     )
+582:     db.add(audit)
+583:     db.commit()
+584: 
+585:     return {
+586:         "status": "success",
+587:         "message": f"{len(saved_subs)} documents submitted successfully. Verification running in review queue.",
+588:         "documents": [
+589:             {
+590:                 "id": s.id,
+591:                 "title": s.title,
+592:                 "author": s.author,
+593:                 "status": s.status or "Under Review",
+594:                 "created_at": s.created_at.strftime("%Y-%m-%d %H:%M:%S") if s.created_at else None
+595:             }
+596:             for s in saved_subs
+597:         ],
+598:         "files_count": len(files)
+599:     }
+600: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

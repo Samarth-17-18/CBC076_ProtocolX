@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Pass institutional repository submissions as background benchmark in single upload",
+  "EndLine": 378,
+  "Instruction": "Collect existing submissions content and pass as background_corpus benchmark into analyze_document_pair in single upload endpoint.",
+  "ReplacementContent": "    # Auto-analyze against all existing submissions and link with highest matching document\n    existing_subs = db.query(Submission).filter(Submission.id != sub.id).order_by(Submission.created_at.desc()).all()\n    # Institutional benchmark texts\n    background_benchmark = [s.content for s in existing_subs if s.content]\n    \n    report_id = None\n    if existing_subs:\n        best_analysis = None\n        best_target = None\n        best_score = -1.0\n        \n        for cand in existing_subs:\n            if not cand.content.strip():\n                continue\n            cand_analysis = analyze_document_pair(text, cand.content, drop_common_phrases=True, background_corpus=background_benchmark)\n            if cand_analysis[\"overall_similarity\"] > best_score:",
+  "StartLine": 360,
+  "TargetContent": "    # Auto-analyze against all existing submissions and link with highest matching document\n    existing_subs = db.query(Submission).filter(Submission.id != sub.id).order_by(Submission.created_at.desc()).all()\n    \n    report_id = None\n    if existing_subs:\n        best_analysis = None\n        best_target = None\n        best_score = -1.0\n        \n        for cand in existing_subs:\n            if not cand.content.strip():\n                continue\n            cand_analysis = analyze_document_pair(text, cand.content, drop_common_phrases=True)\n            if cand_analysis[\"overall_similarity\"] > best_score:",
+  "TargetFile": "c:\\Synapse\\backend\\main.py",
+  "toolAction": "Adding background benchmark to upload endpoint in main.py",
+  "toolSummary": "Update single upload with background corpus benchmark"
+}

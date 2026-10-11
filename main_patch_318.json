@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Serve User and Admin UI directly from FastAPI at / and /admin, plus API status at /api",
+  "EndLine": 90,
+  "Instruction": "Mount FileResponse routes for user and admin frontends in backend/main.py",
+  "ReplacementContent": "from fastapi.responses import FileResponse, HTMLResponse\nimport os\n\nUSER_UI_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), \"..\", \"uiux\", \"user\", \"synapse.html\"))\nADMIN_UI_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), \"..\", \"uiux\", \"admin\", \"synapse_admin.html\"))\n\n@app.get(\"/\", response_class=HTMLResponse)\ndef read_user_ui():\n    if os.path.exists(USER_UI_PATH):\n        return FileResponse(USER_UI_PATH)\n    return HTMLResponse(\"<h1>Synapse User UI</h1><p>File not found at uiux/user/synapse.html</p>\")\n\n@app.get(\"/admin\", response_class=HTMLResponse)\ndef read_admin_ui():\n    if os.path.exists(ADMIN_UI_PATH):\n        return FileResponse(ADMIN_UI_PATH)\n    return HTMLResponse(\"<h1>Synapse Admin UI</h1><p>File not found at uiux/admin/synapse_admin.html</p>\")\n\n@app.get(\"/api/health\")\ndef read_health():\n    return {\n        \"message\": \"Synapse AI Text Similarity Backend is Running\",\n        \"status\": \"active\",\n        \"model_loaded\": \"protocolx\"\n    }",
+  "StartLine": 84,
+  "TargetContent": "@app.get(\"/\")\ndef read_root():\n    return {\"message\": \"Synapse AI Text Similarity Backend is Running\", \"status\": \"active\"}",
+  "TargetFile": "c:\\Synapse\\backend\\main.py",
+  "toolAction": "Serving UI HTML directly via FastAPI endpoints",
+  "toolSummary": "Mount User and Admin HTML files at / and /admin"
+}

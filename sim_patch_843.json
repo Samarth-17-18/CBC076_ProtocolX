@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Extract batch corpus templates in analyze_batch_submissions",
+  "EndLine": 386,
+  "Instruction": "Pre-extract common template sentences across the entire batch using extract_corpus_template_phrases and pass them to analyze_document_pair.",
+  "ReplacementContent": "    n = len(submissions)\n    if n < 2:\n        return {\"error\": \"Need at least 2 submissions to run batch analysis.\"}\n\n    # Pre-extract common template sentences/prompts across all submitted answerscripts\n    corpus_templates = set()\n    if drop_common_phrases:\n        all_texts = [sub.get(\"content\", \"\") for sub in submissions]\n        corpus_templates = extract_corpus_template_phrases(all_texts, min_df=2)\n\n    all_pairs = []\n    scores = []\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            sub_a = submissions[i]\n            sub_b = submissions[j]\n            res = analyze_document_pair(\n                sub_a[\"content\"], \n                sub_b[\"content\"], \n                drop_common_phrases=drop_common_phrases,\n                corpus_templates=corpus_templates\n            )",
+  "StartLine": 373,
+  "TargetContent": "    n = len(submissions)\n    if n < 2:\n        return {\"error\": \"Need at least 2 submissions to run batch analysis.\"}\n\n    all_pairs = []\n    scores = []\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            sub_a = submissions[i]\n            sub_b = submissions[j]\n            res = analyze_document_pair(sub_a[\"content\"], sub_b[\"content\"], drop_common_phrases=drop_common_phrases)",
+  "TargetFile": "c:\\Synapse\\backend\\similarity_engine.py",
+  "toolAction": "Passing corpus_templates into analyze_batch_submissions",
+  "toolSummary": "Update analyze_batch_submissions to extract corpus templates"
+}

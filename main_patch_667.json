@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Sync submission status when admin makes a decision",
+  "EndLine": 645,
+  "Instruction": "Update related Submissions status when an admin makes a clear/escalate decision in post_admin_decision.",
+  "ReplacementContent": "    is_cleared = req.decision.lower() == \"cleared\"\n    report.status = \"Cleared\" if is_cleared else \"Escalated\"\n    report.reviewed_at = datetime.utcnow()\n    report.reviewer_notes = f\"Decision made by {req.actor}: {report.status}\"\n\n    # Sync status to the user-visible submission(s)\n    if report.doc_a_id:\n        sub_a = db.query(Submission).filter(Submission.id == report.doc_a_id).first()\n        if sub_a:\n            sub_a.status = \"Cleared\" if is_cleared else \"Under Board Review\"\n    if report.doc_b_id:\n        sub_b = db.query(Submission).filter(Submission.id == report.doc_b_id).first()\n        if sub_b:\n            sub_b.status = \"Cleared\" if is_cleared else \"Under Board Review\"\n    \n    # Add audit log\n    audit = AuditLog(\n        icon=\"\u2713\" if is_cleared else \"\u2691\",\n        color=\"\" if is_cleared else \"var(--pink)\",\n        action=f\"Document {report.status.lower()}\",\n        detail=f\"{report.doc_a_title} vs {report.doc_b_title} \u00b7 review decision applied\",\n        actor=req.actor\n    )\n    db.add(audit)\n    db.commit()\n    db.refresh(report)\n    return {\"status\": report.status, \"report_id\": report.id}",
+  "StartLine": 628,
+  "TargetContent": "    is_cleared = req.decision.lower() == \"cleared\"\n    report.status = \"Cleared\" if is_cleared else \"Escalated\"\n    report.reviewed_at = datetime.utcnow()\n    report.reviewer_notes = f\"Decision made by {req.actor}: {report.status}\"\n    \n    # Add audit log\n    audit = AuditLog(\n        icon=\"\u2713\" if is_cleared else \"\u2691\",\n        color=\"\" if is_cleared else \"var(--pink)\",\n        action=f\"Document {report.status.lower()}\",\n        detail=f\"{report.doc_a_title} vs {report.doc_b_title} \u00b7 review decision applied\",\n        actor=req.actor\n    )\n    db.add(audit)\n    db.commit()\n    db.refresh(report)\n    return {\"status\": report.status, \"report_id\": report.id}",
+  "TargetFile": "c:\\Synapse\\backend\\main.py",
+  "toolAction": "Syncing Submission status in post_admin_decision",
+  "toolSummary": "Update post_admin_decision to update Submission status"
+}

@@ -1,0 +1,70 @@
+Created At: 2026-10-11T03:35:18+05:30
+Completed At: 2026-10-11T03:35:18+05:30
+File Path: `file:///c:/Synapse/backend/ml_learner.py`
+Total Lines: 142
+Total Bytes: 5131
+Showing lines 81 to 142
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+81:         """
+82:         if verdict not in ["Flagged", "Cleared"]:
+83:             return None # Skip neutral statuses like 'Pending Review'
+84: 
+85:         target = 1.0 if verdict == "Flagged" else 0.0
+86:         
+87:         x1 = exact_pct / 100.0
+88:         x2 = semantic_pct / 100.0
+89:         x3 = coverage_pct / 100.0
+90:         
+91:         w = self.data["weights"]
+92:         bias = self.data.get("calibration_bias", 0.0)
+93: 
+94:         # Current prediction
+95:         pred = (w["w_exact"] * x1) + (w["w_semantic"] * x2) + (w["w_coverage"] * x3) + bias
+96:         error = target - pred # Gradient direction
+97: 
+98:         # Update weights via Online SGD step
+99:         lr = self.learning_rate
+100:         w["w_exact"] = max(0.1, min(0.7, w["w_exact"] + lr * error * x1))
+101:         w["w_semantic"] = max(0.1, min(0.7, w["w_semantic"] + lr * error * x2))
+102:         w["w_coverage"] = max(0.05, min(0.5, w["w_coverage"] + lr * error * x3))
+103:         
+104:         # Normalize weights so they sum to 1.0
+105:         total_w = w["w_exact"] + w["w_semantic"] + w["w_coverage"]
+106:         w["w_exact"] = round(w["w_exact"] / total_w, 3)
+107:         w["w_semantic"] = round(w["w_semantic"] / total_w, 3)
+108:         w["w_coverage"] = round(1.0 - (w["w_exact"] + w["w_semantic"]), 3)
+109: 
+110:         # Adjust calibration bias
+111:         bias = max(-0.5, min(0.5, bias + lr * error * 0.5))
+112:         self.data["calibration_bias"] = round(bias, 4)
+113: 
+114:         # If a paper was 'Cleared' despite high overlap, learn shared terms as false-positive phrases
+115:         if verdict == "Cleared" and shared_terms:
+116:             learned = set(self.data.get("learned_stopwords", []))
+117:             for t in shared_terms[:5]:
+118:                 if len(t) > 3:
+119:                     learned.add(t.lower())
+120:             self.data["learned_stopwords"] = list(learned)[:100]
+121: 
+122:         self.data["total_feedback_samples"] += 1
+123:         self.data["version"] += 1
+124: 
+125:         update_log = {
+126:             "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+127:             "verdict": verdict,
+128:             "error_adjusted": round(error, 3),
+129:             "new_weights": w.copy(),
+130:             "sample_index": self.data["total_feedback_samples"]
+131:         }
+132:         
+133:         recent = self.data.get("recent_updates", [])
+134:         recent.append(update_log)
+135:         self.data["recent_updates"] = recent[-15:] # Keep last 15 updates
+136: 
+137:         self._save_weights()
+138:         return update_log
+139: 
+140: # Singleton model instance
+141: ml_model = ActiveLearningClassifier()
+142: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

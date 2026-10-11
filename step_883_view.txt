@@ -1,0 +1,109 @@
+Created At: 2026-10-11T03:45:08+05:30
+Completed At: 2026-10-11T03:45:08+05:30
+File Path: `file:///c:/Synapse/backend/main.py`
+Total Lines: 901
+Total Bytes: 35905
+Showing lines 240 to 340
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+240:         })
+241:     return results
+242: 
+243: @app.get("/api/reports/{report_id}")
+244: def get_single_report(report_id: int, db: Session = Depends(get_db)):
+245:     r = db.query(ComparisonReport).filter(ComparisonReport.id == report_id).first()
+246:     if not r:
+247:         raise HTTPException(status_code=404, detail="Report not found")
+248:     
+249:     doc_a = db.query(Submission).filter(Submission.id == r.doc_a_id).first() if r.doc_a_id else None
+250:     doc_b = db.query(Submission).filter(Submission.id == r.doc_b_id).first() if r.doc_b_id else None
+251:     evidence_list = json.loads(r.evidence_json) if r.evidence_json else []
+252:     
+253:     return {
+254:         "id": r.id,
+255:         "doc_a_id": r.doc_a_id,
+256:         "doc_b_id": r.doc_b_id,
+257:         "doc_a_title": r.doc_a_title,
+258:         "doc_b_title": r.doc_b_title,
+259:         "doc_a_text": doc_a.content if doc_a else "",
+260:         "doc_b_text": doc_b.content if doc_b else "",
+261:         "overall_similarity": r.overall_similarity,
+262:         "exact_similarity": r.exact_similarity,
+263:         "semantic_similarity": r.semantic_similarity,
+264:         "explanation": r.explanation,
+265:         "evidence": evidence_list,
+266:         "status": r.status,
+267:         "reviewer_notes": r.reviewer_notes,
+268:         "created_at": r.created_at.strftime("%Y-%m-%d %H:%M:%S") if r.created_at else None,
+269:         "reviewed_at": r.reviewed_at.strftime("%Y-%m-%d %H:%M:%S") if r.reviewed_at else None
+270:     }
+271: 
+272: from .ml_learner import ml_model
+273: 
+274: @app.get("/api/admin/ml-model")
+275: def get_ml_status(db: Session = Depends(get_db)):
+276:     """Admin-only endpoint: Exposes fine-tuned model statistics, weights, feedback count, calibration, and per-file statistics alongside template distinction analysis."""
+277:     # 1. Fetch all submissions to compute per-file statistics
+278:     all_subs = db.query(Submission).order_by(Submission.created_at.desc()).all()
+279:     all_reports = db.query(ComparisonReport).all()
+280: 
+281:     # Pre-extract shared template phrases across all answerscripts
+282:     from .similarity_engine import extract_corpus_template_phrases, is_predominantly_boilerplate
+283:     corpus_texts = [s.content for s in all_subs if s.content]
+284:     detected_templates = list(extract_corpus_template_phrases(corpus_texts, min_df=2))
+285: 
+286:     # Compute per-file statistics
+287:     file_stats = []
+288:     for s in all_subs:
+289:         content = s.content or ""
+290:         words = content.split()
+291:         word_count = len(words)
+292:         char_count = len(content)
+293:         sents = [sent.strip() for sent in re.split(r'(?<=[.!?])\s+', content.strip()) if len(sent.strip()) > 3]
+294:         sent_count = len(sents)
+295:         
+296:         # Calculate boilerplate/template ratio for this file
+297:         template_sents = [sent for sent in sents if is_predominantly_boilerplate(sent, corpus_templates=set(detected_templates))]
+298:         template_ratio = round((len(template_sents) / max(1, sent_count)) * 100, 1)
+299: 
+300:         # Find max similarity score in comparison reports
+301:         relevant_reports = [r for r in all_reports if r.doc_a_id == s.id or r.doc_b_id == s.id or r.doc_a_title == s.title or r.doc_b_title == s.title]
+302:         max_score = max([r.overall_similarity for r in relevant_reports], default=0.0)
+303:         avg_score = round(sum([r.overall_similarity for r in relevant_reports]) / max(1, len(relevant_reports)), 1) if relevant_reports else 0.0
+304: 
+305:         file_stats.append({
+306:             "id": s.id,
+307:             "title": s.title,
+308:             "author": s.author,
+309:             "word_count": word_count,
+310:             "character_count": char_count,
+311:             "sentence_count": sent_count,
+312:             "status": s.status or "Under Review",
+313:             "template_discount_ratio": template_ratio,
+314:             "template_sentences_filtered": len(template_sents),
+315:             "max_similarity_score": round(max_score, 1),
+316:             "avg_similarity_score": avg_score,
+317:             "comparisons_count": len(relevant_reports),
+318:             "created_at": s.created_at.strftime("%Y-%m-%d %H:%M:%S") if s.created_at else None
+319:         })
+320: 
+321:     return {
+322:         "weights": ml_model.data["weights"],
+323:         "calibration_bias": ml_model.data["calibration_bias"],
+324:         "total_feedback_samples": ml_model.data["total_feedback_samples"],
+325:         "version": ml_model.data["version"],
+326:         "learned_stopwords": ml_model.data["learned_stopwords"],
+327:         "recent_updates": ml_model.data.get("recent_updates", []),
+328:         "detected_corpus_templates": detected_templates[:15],
+329:         "total_templates_discovered": len(detected_templates),
+330:         "total_documents_analyzed": len(all_subs),
+331:         "file_statistics": file_stats
+332:     }
+333: 
+334: @app.put("/api/reports/{report_id}/review")
+335: def update_report_review(report_id: int, review: ReviewUpdate, db: Session = Depends(get_db)):
+336:     report = db.query(ComparisonReport).filter(ComparisonReport.id == report_id).first()
+337:     if not report:
+338:         raise HTTPException(status_code=404, detail="Report not found")
+339:     
+340:     report.status = review.status
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

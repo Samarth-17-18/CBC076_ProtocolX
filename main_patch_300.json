@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Add GET /api/reports/{id} and auto-comparison on upload for user experience in main.py",
+  "EndLine": 185,
+  "Instruction": "Add single report endpoint to backend/main.py",
+  "ReplacementContent": "            \"status\": r.status,\n            \"reviewer_notes\": r.reviewer_notes,\n            \"created_at\": r.created_at.strftime(\"%Y-%m-%d %H:%M:%S\") if r.created_at else None,\n            \"reviewed_at\": r.reviewed_at.strftime(\"%Y-%m-%d %H:%M:%S\") if r.reviewed_at else None\n        })\n    return results\n\n@app.get(\"/api/reports/{report_id}\")\ndef get_single_report(report_id: int, db: Session = Depends(get_db)):\n    r = db.query(ComparisonReport).filter(ComparisonReport.id == report_id).first()\n    if not r:\n        raise HTTPException(status_code=404, detail=\"Report not found\")\n    \n    doc_a = db.query(Submission).filter(Submission.id == r.doc_a_id).first() if r.doc_a_id else None\n    evidence_list = json.loads(r.evidence_json) if r.evidence_json else []\n    \n    return {\n        \"id\": r.id,\n        \"doc_a_title\": r.doc_a_title,\n        \"doc_b_title\": r.doc_b_title,\n        \"doc_a_text\": doc_a.content if doc_a else \"\",\n        \"overall_similarity\": r.overall_similarity,\n        \"exact_similarity\": r.exact_similarity,\n        \"semantic_similarity\": r.semantic_similarity,\n        \"explanation\": r.explanation,\n        \"evidence\": evidence_list,\n        \"status\": r.status,\n        \"reviewer_notes\": r.reviewer_notes,\n        \"created_at\": r.created_at.strftime(\"%Y-%m-%d %H:%M:%S\") if r.created_at else None,\n        \"reviewed_at\": r.reviewed_at.strftime(\"%Y-%m-%d %H:%M:%S\") if r.reviewed_at else None\n    }\n",
+  "StartLine": 178,
+  "TargetContent": "            \"status\": r.status,\n            \"reviewer_notes\": r.reviewer_notes,\n            \"created_at\": r.created_at.strftime(\"%Y-%m-%d %H:%M:%S\") if r.created_at else None,\n            \"reviewed_at\": r.reviewed_at.strftime(\"%Y-%m-%d %H:%M:%S\") if r.reviewed_at else None\n        })\n    return results",
+  "TargetFile": "c:\\Synapse\\backend\\main.py",
+  "toolAction": "Adding GET /api/reports/{id} endpoint",
+  "toolSummary": "Add get_single_report endpoint in main.py"
+}

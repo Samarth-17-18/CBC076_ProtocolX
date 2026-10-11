@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Synapse — catch the copy, keep the proof</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f4efe3;--ink:#16130f;--acid:#c8f536;--pink:#ffb5d3;--sky:#9ed9ff;--lav:#cdbbff;--card:#fffdf7;
+--sh:5px 5px 0 var(--ink);--d:'Bricolage Grotesque','Trebuchet MS',sans-serif;--m:'Space Mono',ui-monospace,monospace;
+padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
+:root:not([data-theme=light]){color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 var(--d);overflow-x:hidden;min-height:100vh;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.07'/%3E%3C/svg%3E")}
+.mono{font-family:var(--m);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px clamp(14px,4vw,40px);border-bottom:2.5px solid var(--ink);background:var(--paper);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:26px;letter-spacing:-.04em;cursor:pointer}
+.logo i{width:34px;height:34px;background:var(--acid);border:2.5px solid var(--ink);border-radius:50% 50% 50% 8px;display:grid;place-items:center;animation:wob 6s ease-in-out infinite}
+.logo i:after{content:"";width:10px;height:10px;background:var(--ink);border-radius:50%}
+@keyframes wob{50%{transform:rotate(25deg) scale(1.08)}}
+nav{display:flex;gap:8px;flex-wrap:wrap}
+nav button,.btn{font:700 14px var(--d);border:2.5px solid var(--ink);background:var(--lav);padding:8px 16px;border-radius:99px;cursor:pointer;box-shadow:3px 3px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+nav button:hover,.btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+nav button:active,.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+nav button:nth-child(2){background:var(--pink)}nav button:nth-child(3){background:var(--sky)}nav button.on{background:var(--ink);color:var(--paper)}
+.btn.acid{background:var(--acid)}.btn.pink{background:var(--pink)}.btn.sky{background:var(--sky)}.btn.lav{background:var(--lav)}
+.btn{font-size:16px;padding:12px 22px}
+main{position:relative;padding:clamp(18px,4vw,48px);max-width:1280px;margin:auto}
+.view{display:none}.view.on{display:block;animation:in .5s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes in{from{opacity:0;transform:translateY(28px) rotate(-.6deg)}}
+h1{font-size:clamp(44px,8vw,104px);line-height:.92;letter-spacing:-.05em;margin:0 0 18px;font-weight:800}
+h2{font-size:clamp(28px,4vw,46px);letter-spacing:-.04em;margin:0 0 6px;line-height:1}
+mark{background:var(--acid);padding:0 .12em;border-radius:.2em;display:inline-block;transform:rotate(-1.5deg)}
+.card{background:var(--card);border:2.5px solid var(--ink);border-radius:26px 26px 26px 6px;box-shadow:var(--sh);padding:clamp(18px,3vw,32px)}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:clamp(20px,4vw,56px);align-items:center}
+.float{position:absolute;pointer-events:none;border:2.5px solid var(--ink);animation:fl 7s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-18px) rotate(10deg)}}
+.sticker{display:inline-block;font:700 12px var(--m);border:2px solid var(--ink);padding:4px 10px;border-radius:99px;background:var(--lav);transform:rotate(-3deg);text-transform:uppercase}
+label{display:block;font:700 12px var(--m);text-transform:uppercase;margin:14px 0 6px}
+input[type=text],input[type=email],input[type=password]{width:100%;font:500 16px var(--d);padding:12px 14px;border:2.5px solid var(--ink);border-radius:14px;background:#fff;outline:none}
+input:focus{box-shadow:4px 4px 0 var(--sky)}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.role{border:2.5px solid var(--ink);border-radius:18px;padding:12px;cursor:pointer;background:var(--pink);text-align:left;font:inherit;transition:.15s}
+.role b{display:block;font-size:17px}.role small{font:12px var(--m)}
+.role.on{background:var(--acid);transform:rotate(-1.2deg);box-shadow:4px 4px 0 var(--ink)}
+.role[data-r=admin]{background:var(--sky)}.role[data-r=admin].on{background:var(--sky);transform:rotate(1.2deg)}
+.err{color:#b3002d;font:700 12px var(--m);min-height:18px;margin-top:10px}
+.shake{animation:sh .4s}@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.drop{border:3px dashed var(--ink);border-radius:30px 8px 30px 8px;padding:clamp(28px,6vw,64px);text-align:center;background:var(--lav);cursor:pointer;transition:.2s}
+.drop:hover,.drop.over{background:var(--acid);transform:rotate(-.6deg) scale(1.01)}
+.bar{height:22px;border:2.5px solid var(--ink);border-radius:99px;background:#fff;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:repeating-linear-gradient(45deg,var(--acid) 0 12px,#b5e020 12px 24px);transition:width .2s}
+.ring{--p:0;width:190px;aspect-ratio:1;border-radius:50%;border:2.5px solid var(--ink);background:conic-gradient(var(--pink) calc(var(--p)*1%),var(--acid) 0);display:grid;place-items:center;transition:--p 1s}
+.ring div{width:70%;aspect-ratio:1;border-radius:50%;background:var(--card);border:2.5px solid var(--ink);display:grid;place-items:center;font-weight:800;font-size:44px;letter-spacing:-.04em}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin:24px 0}
+.tile{border:2.5px solid var(--ink);border-radius:22px;padding:16px;box-shadow:4px 4px 0 var(--ink)}
+.tile b{display:block;font-size:38px;letter-spacing:-.04em;line-height:1.1}
+.tile:nth-child(1){background:var(--acid);transform:rotate(-1deg)}.tile:nth-child(2){background:var(--pink);transform:rotate(.8deg)}.tile:nth-child(3){background:var(--sky);transform:rotate(-.6deg)}.tile:nth-child(4){background:var(--lav);transform:rotate(1deg)}
+input[type=range]{width:100%;accent-color:var(--ink);height:30px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:2px dashed var(--ink)}
+.sw button{width:56px;height:30px;border:2.5px solid var(--ink);border-radius:99px;background:var(--pink);position:relative;cursor:pointer;flex:none}
+.sw button:after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--ink);transition:.2s}
+.sw button.on{background:var(--acid)}.sw button.on:after{left:28px}
+.tw{overflow-x:auto;border:2.5px solid var(--ink);border-radius:20px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:620px}
+th{font:700 12px var(--m);text-transform:uppercase;text-align:left;background:var(--ink);color:var(--paper);padding:10px 14px}
+td{padding:12px 14px;border-top:2px solid var(--ink);font-size:14px}
+.chip{font:700 11px var(--m);padding:3px 9px;border:2px solid var(--ink);border-radius:99px;background:var(--lav);white-space:nowrap}
+.q{height:10px;background:#fff;border:2px solid var(--ink);border-radius:9px;overflow:hidden;min-width:90px}.q i{display:block;height:100%;background:var(--pink)}
+.ledger div{display:flex;gap:14px;padding:12px 0;border-top:2px dashed var(--ink)}
+.ledger code{font:700 12px var(--m);background:var(--acid);border:2px solid var(--ink);border-radius:8px;padding:2px 8px;height:fit-content;white-space:nowrap}
+.marq{overflow:hidden;border-block:2.5px solid var(--ink);background:var(--acid);margin:0 calc(-1*clamp(18px,4vw,48px)) 28px;white-space:nowrap}
+.marq span{display:inline-block;padding:8px 0;font:700 13px var(--m);text-transform:uppercase;animation:mq 26s linear infinite}
+@keyframes mq{to{transform:translateX(-50%)}}
+.src{margin:10px 0}.src .q{margin-top:4px}
+#toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,120px);background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:99px;font:700 13px var(--m);transition:.35s cubic-bezier(.2,.9,.3,1.3);z-index:50;max-width:92vw}
+#toast.on{transform:translate(-50%,0)}
+footer{padding:26px clamp(14px,4vw,40px);border-top:2.5px solid var(--ink);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer a{cursor:pointer;text-decoration:underline;margin-right:14px}
+.center{text-align:center;max-width:640px;margin:6vh auto}
+@media(max-width:860px){.grid2{grid-template-columns:1fr}.hide-s{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" onclick="go('login')"><i></i>synapse</div>
+  <nav id="nav">
+    <button data-v="login">Sign in</button><button data-v="work">Workspace</button><button data-v="admin">Governance</button>
+  </nav>
+</header>
+
+<main>
+<!-- LOGIN -->
+<section class="view" id="v-login">
+  <div class="marq"><span>similarity ✺ paraphrase radar ✺ citations respected ✺ receipts for every flag ✺ similarity ✺ paraphrase radar ✺ citations respected ✺ receipts for every flag ✺ similarity ✺ paraphrase radar ✺ citations respected ✺ receipts for every flag ✺ similarity ✺ paraphrase radar ✺ citations respected ✺ receipts for every flag ✺&nbsp;</span></div>
+  <div class="float hide-s" style="width:90px;height:90px;background:var(--pink);border-radius:50%;right:6%;top:8%"></div>
+  <div class="float hide-s" style="width:70px;height:70px;background:var(--sky);border-radius:12px 40px;left:46%;top:2%;animation-delay:-2s"></div>
+  <div class="grid2">
+    <div>
+      <span class="sticker">AI text similarity &amp; plagiarism</span>
+      <h1 style="margin-top:16px">Catch the <mark>copy.</mark><br>Keep the proof.</h1>
+      <p style="max-width:460px;font-size:19px">Synapse reads meaning, not just matching words. Paraphrase, translation-hopping and machine prose all leave a trail. We show you the trail.</p>
+    </div>
+    <form class="card" id="lf" onsubmit="return login(event)" novalidate>
+      <h2>Hey, welcome back</h2><div class="mono">pick your desk</div>
+      <div class="roles" style="margin-top:14px">
+        <button type="button" class="role on" data-r="user"><b>Reviewer</b><small>submit + read reports</small></button>
+        <button type="button" class="role" data-r="admin"><b>Admin</b><small>tune + govern</small></button>
+      </div>
+      <label for="em">Institution email</label><input id="em" type="email" placeholder="you@university.edu" autocomplete="username">
+      <label for="pw">Password</label><input id="pw" type="password" placeholder="••••••••" autocomplete="current-password">
+      <div class="err" id="le"></div>
+      <button class="btn acid" style="width:100%;margin-top:6px">Let me in →</button>
+      <p class="mono" style="margin:14px 0 0">Demo: any email + 6 characters</p>
+    </form>
+  </div>
+</section>
+
+<!-- WORKSPACE -->
+<section class="view" id="v-work">
+  <span class="sticker">reviewer desk</span>
+  <h1 style="font-size:clamp(40px,6vw,76px)">Drop a <mark>manuscript.</mark></h1>
+  <div class="drop" id="drop"><div style="font-size:48px">✂︎</div><h2>Drag a file here</h2><p class="mono">or click · pdf docx txt · up to 25 MB</p><input id="file" type="file" hidden accept=".pdf,.doc,.docx,.txt"></div>
+  <div id="up" class="card" style="display:none;margin-top:22px">
+    <div class="row" style="justify-content:space-between"><b id="fn">file</b><span class="mono" id="pc">0%</span></div>
+    <div class="bar" style="margin-top:10px"><i id="pb"></i></div>
+    <p class="mono" id="ps" style="margin-bottom:0">uploading…</p>
+  </div>
+  <div id="rep" class="card" style="display:none;margin-top:22px">
+    <div class="grid2" style="grid-template-columns:auto 1fr">
+      <div class="ring" id="ring"><div id="rv">0%</div></div>
+      <div>
+        <h2>Looks mostly original.</h2>
+        <p>Report preview · submission <b id="sid"></b></p>
+        <div class="src"><span class="mono">arXiv:2103.xxxx — verbatim</span><div class="q"><i style="width:34%"></i></div></div>
+        <div class="src"><span class="mono">thesis vault — paraphrase</span><div class="q"><i style="width:22%"></i></div></div>
+        <div class="src"><span class="mono">citations (excluded)</span><div class="q"><i style="width:12%;background:var(--sky)"></i></div></div>
+        <div class="row" style="margin-top:14px"><button class="btn lav" onclick="toast('Certificate downloading (demo)')">Export PDF</button><button class="btn sky" onclick="state('received')">Send for review</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ADMIN -->
+<section class="view" id="v-admin">
+  <span class="sticker">institutional admin</span>
+  <h1 style="font-size:clamp(40px,6vw,76px)">Run the <mark>engine.</mark></h1>
+  <div class="tiles">
+    <div class="tile"><span class="mono">ingest</span><b>482/s</b>docs, zero backlog</div>
+    <div class="tile"><span class="mono">shards</span><b>4 live</b>US · EU · AP</div>
+    <div class="tile"><span class="mono">uptime</span><b>99.99%</b>consensus</div>
+    <div class="tile"><span class="mono">departments</span><b>14</b>under policy</div>
+  </div>
+  <div class="grid2" style="align-items:start">
+    <div class="card">
+      <h2>Sensitivity governor</h2><div class="mono">changes apply institution-wide</div>
+      <label>Verbatim span · <span id="o1">15</span> tokens</label><input type="range" id="s1" min="6" max="40" value="15">
+      <label>Paraphrase cosine ≥ <span id="o2">0.82</span></label><input type="range" id="s2" min="65" max="95" value="82">
+      <div class="sw"><span><b>Cross-lingual obfuscation</b><br><small>DE → FR → EN hops</small></span><button class="on" aria-label="toggle"></button></div>
+      <div class="sw"><span><b>AI burstiness check</b><br><small>flat token distribution</small></span><button class="on" aria-label="toggle"></button></div>
+      <div class="sw"><span><b>Bibliography filter</b><br><small>IEEE · ACM · APA · Nature</small></span><button aria-label="toggle"></button></div>
+      <div class="row" style="margin-top:14px"><button class="btn sky" onclick="sim()">Simulate</button><button class="btn acid" onclick="toast('Applied to all 14 departments')">Apply to all</button></div>
+      <p class="mono" id="so" style="margin-bottom:0">test corpus: run a simulation</p>
+    </div>
+    <div class="card ledger">
+      <h2>Audit ledger</h2><div class="mono">merkle root 0x9e12…cb47</div>
+      <div style="margin-top:10px"><code>EV-9821</code><span><b>Manual exemption</b><br>Dr. Thorne approved a citation exemption on MIT-CS-2024-912.</span></div>
+      <div><code>EV-9820</code><span><b>Threshold change</b><br>Cosine moved 0.80 → 0.82 by Super-Admin.</span></div>
+      <div><code>EV-9819</code><span><b>Role granted</b><br>Forensic Auditor ring added for Humanities.</span></div>
+    </div>
+  </div>
+  <h2 style="margin:36px 0 12px">Departments &amp; roles</h2>
+  <div class="tw"><table>
+    <tr><th>Department</th><th>Officer</th><th>Role</th><th>Quota</th><th>Auth</th></tr>
+    <tr><td><b>Computer Science &amp; AI</b></td><td>Prof. Evelyn Vance</td><td><span class="chip">Lead reviewer</span></td><td><div class="q"><i style="width:98%"></i></div>4,280 / 4,350</td><td>FIDO2</td></tr>
+    <tr><td><b>Biological Engineering</b></td><td>Dr. Marcus Sterling</td><td><span class="chip">Lead reviewer</span></td><td><div class="q"><i style="width:42%"></i></div>1,840 / 4,350</td><td>Hardware token</td></tr>
+    <tr><td><b>Humanities &amp; Philosophy</b></td><td>Dr. Clara Dupont</td><td><span class="chip">Forensic auditor</span></td><td><div class="q"><i style="width:20%"></i></div>890 / 4,350</td><td>SSO</td></tr>
+    <tr><td><b>Graduate Board</b></td><td>Dean Julian Ramirez</td><td><span class="chip" style="background:var(--acid)">Super-admin</span></td><td><div class="q"><i style="width:79%"></i></div>3,420 / 4,350</td><td>Air-gapped key</td></tr>
+  </table></div>
+</section>
+
+<!-- STATUS -->
+<section class="view" id="v-status"><div class="center">
+  <div class="float" id="sf" style="width:110px;height:110px;border-radius:50%;background:var(--acid);position:relative;margin:auto;display:grid;place-items:center;font-size:48px">✓</div>
+  <h1 id="st" style="font-size:clamp(36px,6vw,64px);margin-top:24px"></h1><p id="sd" style="font-size:18px"></p>
+  <div class="row" style="justify-content:center"><button class="btn acid" id="sb"></button></div>
+</div></section>
+</main>
+
+<footer><span class="mono">© 2026 Synapse · front-end prototype</span><span><a onclick="state('received')">received</a><a onclick="state('error')">error</a><a onclick="state('out')">sign out</a></span></footer>
+<div id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let role='user',t0;
+function go(v){
+  $$('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));
+  $$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  scrollTo({top:0,behavior:'smooth'});
+}
+$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t0);t0=setTimeout(()=>t.classList.remove('on'),2600)}
+$$('.role').forEach(b=>b.onclick=()=>{role=b.dataset.r;$$('.role').forEach(x=>x.classList.toggle('on',x===b))});
+function login(e){e.preventDefault();const em=$('#em').value.trim(),pw=$('#pw').value,er=$('#le'),f=$('#lf');
+  if(!/^\S+@\S+\.\S+$/.test(em)||pw.length<6){er.textContent=!em||!pw?'Fill in both fields.':'Check email format and use 6+ characters.';f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');return false}
+  er.textContent='';toast('Signed in as '+(role==='admin'?'Admin':'Reviewer'));go(role==='admin'?'admin':'work');return false}
+// upload simulation
+const drop=$('#drop'),file=$('#file');
+drop.onclick=()=>file.click();
+['dragover','dragenter'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>e.dataTransfer.files[0]&&upload(e.dataTransfer.files[0]));
+file.onchange=()=>file.files[0]&&upload(file.files[0]);
+function upload(f){
+  $('#up').style.display='block';$('#rep').style.display='none';$('#fn').textContent=f.name;
+  let p=0;const steps=[[30,'uploading…'],[60,'embedding passages…'],[90,'comparing against shards…'],[100,'done']];
+  const iv=setInterval(()=>{p+=3+Math.random()*5;if(p>=100)p=100;
+    $('#pb').style.width=p+'%';$('#pc').textContent=Math.round(p)+'%';
+    $('#ps').textContent=steps.find(s=>p<=s[0])[1];
+    if(p===100){clearInterval(iv);report()}},120)}
+function report(){
+  const v=Math.round(8+Math.random()*10);$('#rep').style.display='block';$('#sid').textContent='#SYN-'+Math.floor(1000+Math.random()*9000);
+  $('#ring').style.setProperty('--p',v);$('#rv').textContent=v+'%';$('#rep').scrollIntoView({behavior:'smooth',block:'center'})}
+// admin
+const o=(s,d,f)=>$(s).oninput=e=>$(d).textContent=f(e.target.value);
+o('#s1','#o1',v=>v);o('#s2','#o2',v=>(v/100).toFixed(2));
+$$('.sw button').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+function sim(){const s=+$('#s1').value,c=+$('#s2').value;
+  const flag=Math.max(1,Math.round(34-s*.5+(95-c)*.6));
+  $('#so').textContent='test corpus → '+flag+'% of 1,200 docs flagged ('+Math.round(flag*12)+' docs)';}
+// status
+function state(k){
+  const m={received:['Submission received.','It is in the queue. We will ping you when the report is ready.','Back to workspace','work','✓','var(--acid)'],
+  error:['Analysis hit a snag.','A shard timed out. Nothing is lost. Try again in a moment.','Retry','work','!','var(--pink)'],
+  out:['You are signed out.','Session closed. Tokens cleared.','Sign in again','login','☺','var(--sky)']}[k];
+  $('#st').textContent=m[0];$('#sd').textContent=m[1];$('#sb').textContent=m[2];$('#sb').onclick=()=>go(m[3]);
+  $('#sf').textContent=m[4];$('#sf').style.background=m[5];go('status');$$('#nav button').forEach(b=>b.classList.remove('on'))}
+go('login');
+</script>
+</body>
+</html>

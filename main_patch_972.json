@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Import re in backend/main.py",
+  "EndLine": 8,
+  "Instruction": "Add import re to main.py",
+  "ReplacementContent": "from pydantic import BaseModel\nfrom typing import List, Optional, Dict, Any\nimport json\nimport re\nfrom datetime import datetime",
+  "StartLine": 4,
+  "TargetContent": "from pydantic import BaseModel\nfrom typing import List, Optional, Dict, Any\nimport json\nfrom datetime import datetime",
+  "TargetFile": "c:\\Synapse\\backend\\main.py",
+  "toolAction": "Editing file",
+  "toolSummary": "Add import re to backend/main.py"
+}

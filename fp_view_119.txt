@@ -1,0 +1,68 @@
+Created At: 2026-10-11T01:11:28+05:30
+Completed At: 2026-10-11T01:11:28+05:30
+File Path: `file:///c:/Synapse/backend/file_parser.py`
+Total Lines: 106
+Total Bytes: 4242
+Showing lines 1 to 60
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import io
+2: import os
+3: import re
+4: from typing import Tuple
+5: 
+6: def extract_text_from_txt(file_bytes: bytes) -> str:
+7:     """Extracts text from UTF-8 / ASCII / Latin-1 encoded plain text."""
+8:     for encoding in ["utf-8", "latin-1", "utf-16", "cp1252"]:
+9:         try:
+10:             return file_bytes.decode(encoding)
+11:         except UnicodeDecodeError:
+12:             continue
+13:     return file_bytes.decode("utf-8", errors="replace")
+14: 
+15: def extract_text_from_pdf(file_bytes: bytes) -> str:
+16:     """Extracts text from digital PDF using pypdf."""
+17:     try:
+18:         from pypdf import PdfReader
+19:         reader = PdfReader(io.BytesIO(file_bytes))
+20:         extracted_pages = []
+21:         for i, page in enumerate(reader.pages):
+22:             text = page.extract_text()
+23:             if text:
+24:                 extracted_pages.append(text.strip())
+25:         return "\n\n".join(extracted_pages)
+26:     except Exception as e:
+27:         return f"[PDF Extraction Error: {str(e)}]"
+28: 
+29: def extract_text_from_docx(file_bytes: bytes) -> str:
+30:     """Extracts text from Microsoft Word (.docx) files."""
+31:     try:
+32:         import docx
+33:         doc = docx.Document(io.BytesIO(file_bytes))
+34:         paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+35:         # Also extract text from tables
+36:         for table in doc.tables:
+37:             for row in table.rows:
+38:                 row_text = " | ".join(cell.text.strip() for cell in row.cells if cell.text.strip())
+39:                 if row_text:
+40:                     paragraphs.append(row_text)
+41:         return "\n\n".join(paragraphs)
+42:     except Exception as e:
+43:         return f"[DOCX Extraction Error: {str(e)}]"
+44: 
+45: def extract_text_from_image(file_bytes: bytes, filename: str = "") -> Tuple[str, str]:
+46:     """
+47:     Extracts text from images (.png, .jpg, .jpeg) using pytesseract if available,
+48:     or falls back gracefully with helpful guidance.
+49:     """
+50:     try:
+51:         from PIL import Image
+52:         image = Image.open(io.BytesIO(file_bytes))
+53:         
+54:         # Check pytesseract
+55:         import pytesseract
+56:         # Auto-detect Tesseract in typical Windows locations if not on PATH
+57:         common_paths = [
+58:             r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+59:             r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+60:             os.path.expanduser(r"~\AppData\Local\Programs\Tesseract-OCR\tesseract.exe")
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

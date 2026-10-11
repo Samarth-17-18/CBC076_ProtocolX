@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Support multiple file selection and show multi-doc batch upload progress in synapse.html",
+  "EndLine": 149,
+  "Instruction": "Update file dropzone in synapse.html to allow multiple files and batch scanning",
+  "ReplacementContent": "  <h1 style=\"font-size:clamp(40px,6vw,76px)\" id=\"hi\">Hi. Drop your <mark>drafts.</mark></h1>\n  <div class=\"drop\" id=\"drop\">\n    <div style=\"font-size:48px\">\u2702\ufe0e</div>\n    <h2>Drag multiple documents here</h2>\n    <p class=\"mono\">or click to choose files \u00b7 compare multiple answers/drafts \u00b7 pdf docx txt</p>\n    <input id=\"file\" type=\"file\" hidden multiple accept=\".pdf,.doc,.docx,.txt\">\n  </div>\n  <div id=\"up\" class=\"card\" style=\"display:none;margin-top:22px\">\n    <div class=\"row\" style=\"justify-content:space-between\"><b id=\"fn\">files</b><span class=\"mono\" id=\"pc\">0%</span></div>\n    <div class=\"bar\" style=\"margin-top:10px\"><i id=\"pb\"></i></div>\n    <p class=\"mono\" id=\"ps\" style=\"margin-bottom:0\">uploading and comparing documents\u2026</p>\n  </div>\n  <div class=\"row\" style=\"justify-content:space-between;margin:40px 0 4px\"><h2 style=\"margin:0\">Document Comparisons</h2><button class=\"btn lav\" onclick=\"go('hist')\">All reports \u2192</button></div>\n  <div id=\"recent\"></div>",
+  "StartLine": 140,
+  "TargetContent": "  <h1 style=\"font-size:clamp(40px,6vw,76px)\" id=\"hi\">Hi. Drop a <mark>draft.</mark></h1>\n  <div class=\"drop\" id=\"drop\"><div style=\"font-size:48px\">\u2702\ufe0e</div><h2>Drag a file here</h2><p class=\"mono\">or click \u00b7 pdf docx txt \u00b7 up to 25 MB</p><input id=\"file\" type=\"file\" hidden accept=\".pdf,.doc,.docx,.txt\"></div>\n  <div id=\"up\" class=\"card\" style=\"display:none;margin-top:22px\">\n    <div class=\"row\" style=\"justify-content:space-between\"><b id=\"fn\">file</b><span class=\"mono\" id=\"pc\">0%</span></div>\n    <div class=\"bar\" style=\"margin-top:10px\"><i id=\"pb\"></i></div>\n    <p class=\"mono\" id=\"ps\" style=\"margin-bottom:0\">uploading\u2026</p>\n  </div>\n  <div class=\"row\" style=\"justify-content:space-between;margin:40px 0 4px\"><h2 style=\"margin:0\">Recent</h2><button class=\"btn lav\" onclick=\"go('hist')\">All reports \u2192</button></div>\n  <div id=\"recent\"></div>",
+  "TargetFile": "c:\\Synapse\\uiux\\user\\synapse.html",
+  "toolAction": "Updating upload dropzone for multi-file input",
+  "toolSummary": "Allow multiple files in synapse.html dropzone"
+}

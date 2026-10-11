@@ -1,0 +1,102 @@
+Created At: 2026-10-11T01:18:38+05:30
+Completed At: 2026-10-11T01:18:38+05:30
+File Path: `file:///c:/Synapse/backend/similarity_engine.py`
+Total Lines: 333
+Total Bytes: 14205
+Showing lines 240 to 333
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+240:     # ML Calibration: Computes dynamic score using weights optimized from reviewer feedback
+241:     coverage_pct = float(round(coverage_ratio * 100, 1))
+242:     ml_pred = ml_model.predict_calibrated_score(exact_pct, semantic_score, coverage_pct)
+243:     overall = ml_pred["ml_calibrated_similarity"]
+244:     overall = min(100.0, max(0.0, overall))
+245: 
+246:     # Formulate review indicator note
+247:     if overall < 15.0:
+248:         verdict_text = "Low similarity detected. Content is distinct and passes independent review."
+249:     elif exact_pct >= 50.0:
+250:         verdict_text = f"High verbatim match ({exact_pct}% lexical overlap). Substantial unoriginal text copied directly."
+251:     elif semantic_score >= 40.0:
+252:         verdict_text = f"Substantial semantic/paraphrased similarity ({semantic_score}%). Ideas and arguments are duplicated despite phrasing tweaks."
+253:     else:
+254:         verdict_text = f"Moderate similarity ({overall}%). Some recurring subject-matter terms detected."
+255: 
+256:     return {
+257:         "overall_similarity": overall,
+258:         "exact_similarity": exact_pct,
+259:         "semantic_similarity": semantic_score,
+260:         "ml_metadata": ml_pred,
+261:         "explanation": verdict_text,
+262:         "evidence": evidence
+263:     }
+264: 
+265: def analyze_batch_submissions(submissions: list, drop_common_phrases: bool = True):
+266:     """
+267:     Analyzes an entire batch of hundreds of submissions:
+268:     1. Computes all pair-wise similarity scores.
+269:     2. Drops common phrases / template boilerplate.
+270:     3. Calculates the batch mean & standard deviation.
+271:     4. FLAGS ONLY PAIRS ABOVE THE BATCH AVERAGE (or mean + margin).
+272:     """
+273:     n = len(submissions)
+274:     if n < 2:
+275:         return {"error": "Need at least 2 submissions to run batch analysis."}
+276: 
+277:     all_pairs = []
+278:     scores = []
+279: 
+280:     for i in range(n):
+281:         for j in range(i + 1, n):
+282:             sub_a = submissions[i]
+283:             sub_b = submissions[j]
+284:             res = analyze_document_pair(sub_a["content"], sub_b["content"], drop_common_phrases=drop_common_phrases)
+285:             score = res["overall_similarity"]
+286:             scores.append(score)
+287:             all_pairs.append({
+288:                 "sub_a_id": sub_a.get("id", i),
+289:                 "sub_a_title": sub_a.get("title", f"Doc {i+1}"),
+290:                 "sub_b_id": sub_b.get("id", j),
+291:                 "sub_b_title": sub_b.get("title", f"Doc {j+1}"),
+292:                 "overall_similarity": score,
+293:                 "exact_similarity": res["exact_similarity"],
+294:                 "semantic_similarity": res["semantic_similarity"],
+295:                 "explanation": res["explanation"],
+296:                 "evidence": res["evidence"]
+297:             })
+298: 
+299:     batch_avg = float(sum(scores) / len(scores)) if scores else 0.0
+300:     
+301:     # Calculate standard deviation
+302:     variance = sum((s - batch_avg) ** 2 for s in scores) / len(scores) if scores else 0.0
+303:     std_dev = math.sqrt(variance)
+304: 
+305:     # Flag only pairs above the batch average
+306:     flagged_pairs = []
+307:     cleared_pairs = []
+308: 
+309:     for p in all_pairs:
+310:         p["batch_avg"] = round(batch_avg, 2)
+311:         p["delta_above_avg"] = round(p["overall_similarity"] - batch_avg, 2)
+312:         if p["overall_similarity"] > batch_avg:
+313:             p["is_flagged"] = True
+314:             p["batch_reason"] = f"Flagged: Similarity of {p['overall_similarity']}% exceeds batch baseline ({round(batch_avg, 1)}%) by +{p['delta_above_avg']}%."
+315:             flagged_pairs.append(p)
+316:         else:
+317:             p["is_flagged"] = False
+318:             p["batch_reason"] = f"Cleared: Similarity of {p['overall_similarity']}% is below or equal to batch baseline ({round(batch_avg, 1)}%)."
+319:             cleared_pairs.append(p)
+320: 
+321:     # Sort flagged pairs highest similarity first
+322:     flagged_pairs.sort(key=lambda x: x["overall_similarity"], reverse=True)
+323: 
+324:     return {
+325:         "total_documents": n,
+326:         "total_comparisons": len(all_pairs),
+327:         "batch_average_similarity": round(batch_avg, 2),
+328:         "batch_std_dev": round(std_dev, 2),
+329:         "flagged_count": len(flagged_pairs),
+330:         "flagged_pairs": flagged_pairs,
+331:         "cleared_pairs": cleared_pairs
+332:     }
+333: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,0 +1,55 @@
+Created At: 2026-10-11T02:09:33+05:30
+Completed At: 2026-10-11T02:09:34+05:30
+File Path: `file:///c:/Synapse/backend/file_parser.py`
+Total Lines: 106
+Total Bytes: 4242
+Showing lines 60 to 106
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+60:             os.path.expanduser(r"~\AppData\Local\Programs\Tesseract-OCR\tesseract.exe")
+61:         ]
+62:         for p in common_paths:
+63:             if os.path.exists(p):
+64:                 pytesseract.pytesseract.tesseract_cmd = p
+65:                 break
+66:                 
+67:         text = pytesseract.image_to_string(image)
+68:         if text.strip():
+69:             return text.strip(), "success"
+70:         else:
+71:             return "[OCR Alert: No readable text detected in this image. Ensure high resolution and readable contrast.]", "empty"
+72:     except Exception as e:
+73:         err_msg = str(e)
+74:         if "tesseract is not installed" in err_msg.lower() or "not found" in err_msg.lower():
+75:             return (
+76:                 f"[Image Loaded: '{filename}'. OCR Engine requires Tesseract executable. "
+77:                 "For now, please copy/paste handwritten/printed text directly, or install Tesseract Windows binary for automatic scan OCR.]",
+78:                 "engine_missing"
+79:             )
+80:         return f"[Image Processing Error: {err_msg}]", "error"
+81: 
+82: def parse_uploaded_file(uploaded_file) -> Tuple[str, str]:
+83:     """
+84:     Unified router that extracts text from .txt, .pdf, .docx, and image files (.jpg, .jpeg, .png).
+85:     Returns (extracted_text, file_type_summary)
+86:     """
+87:     if uploaded_file is None:
+88:         return "", ""
+89:     
+90:     filename = uploaded_file.name
+91:     ext = os.path.splitext(filename)[1].lower()
+92:     file_bytes = uploaded_file.read()
+93:     
+94:     if ext == ".txt":
+95:         return extract_text_from_txt(file_bytes), "Plain Text (.txt)"
+96:     elif ext == ".pdf":
+97:         return extract_text_from_pdf(file_bytes), "PDF Document (.pdf)"
+98:     elif ext in [".docx", ".doc"]:
+99:         return extract_text_from_docx(file_bytes), "Word Document (.docx)"
+100:     elif ext in [".png", ".jpg", ".jpeg", ".webp", ".bmp"]:
+101:         text, status = extract_text_from_image(file_bytes, filename)
+102:         return text, f"Image ({ext})"
+103:     else:
+104:         # Fallback treat as text
+105:         return extract_text_from_txt(file_bytes), f"Generic File ({ext})"
+106: 
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Call fetchUserDocs in go() and update tab labels",
+  "EndLine": 220,
+  "Instruction": "Update go() function to call fetchUserDocs() when entering work or hist views.",
+  "ReplacementContent": "function go(v){\n  if(!user&&v!=='login'&&v!=='status')v='login';\n  $$('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));\n  $$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));\n  document.body.classList.toggle('auth',!user);scrollTo({top:0,behavior:'smooth'});\n  if(v==='work'||v==='hist')fetchUserDocs();\n}\n$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));",
+  "StartLine": 208,
+  "TargetContent": "function go(v){\n  if(!user&&v!=='login'&&v!=='status')v='login';\n  $$('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));\n  $$('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));\n  document.body.classList.toggle('auth',!user);scrollTo({top:0,behavior:'smooth'});\n  if(v==='work'||v==='hist')fetchReports();\n}\n$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));",
+  "TargetFile": "c:\\Synapse\\uiux\\user\\synapse.html",
+  "toolAction": "Updating go() to call fetchUserDocs",
+  "toolSummary": "Update go() in synapse.html"
+}

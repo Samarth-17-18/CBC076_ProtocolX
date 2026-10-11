@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Make API_BASE use relative paths when served from FastAPI so it works on any port",
+  "EndLine": 193,
+  "Instruction": "Change API_BASE in synapse.html to relative path",
+  "ReplacementContent": "const API_BASE = window.location.origin.startsWith('http') ? '' : 'http://127.0.0.1:8000';",
+  "StartLine": 191,
+  "TargetContent": "const API_BASE = window.location.origin.includes('8000') ? '' : 'http://127.0.0.1:8000';",
+  "TargetFile": "c:\\Synapse\\uiux\\user\\synapse.html",
+  "toolAction": "Updating API_BASE in user UI",
+  "toolSummary": "Use relative paths in synapse.html"
+}

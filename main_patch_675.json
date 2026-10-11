@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Update upload-batch return value to return document receipts and status only",
+  "EndLine": 556,
+  "Instruction": "Ensure upload_batch_documents returns uploaded document records and their status for users, keeping deep comparative reports server-side for admin review.",
+  "ReplacementContent": "    return {\n        \"status\": \"success\",\n        \"message\": f\"{len(saved_subs)} documents submitted successfully. Verification running in review queue.\",\n        \"documents\": [\n            {\n                \"id\": s.id,\n                \"title\": s.title,\n                \"author\": s.author,\n                \"status\": s.status or \"Under Review\",\n                \"created_at\": s.created_at.strftime(\"%Y-%m-%d %H:%M:%S\") if s.created_at else None\n            }\n            for s in saved_subs\n        ],\n        \"files_count\": len(files)\n    }",
+  "StartLine": 537,
+  "TargetContent": "    return {\n        \"status\": \"success\",\n        \"files_count\": len(files),\n        \"reports_count\": len(created_reports),\n        \"primary_report_id\": created_reports[0].id if created_reports else None,\n        \"reports\": [\n            {\n                \"id\": r.id,\n                \"doc_a_title\": r.doc_a_title,\n                \"doc_b_title\": r.doc_b_title,\n                \"overall_similarity\": r.overall_similarity,\n                \"exact_similarity\": r.exact_similarity,\n                \"semantic_similarity\": r.semantic_similarity,\n                \"status\": r.status,\n                \"explanation\": r.explanation\n            }\n            for r in created_reports\n        ]\n    }",
+  "TargetFile": "c:\\Synapse\\backend\\main.py",
+  "toolAction": "Sanitizing upload-batch response for users",
+  "toolSummary": "Update upload-batch return object in main.py"
+}

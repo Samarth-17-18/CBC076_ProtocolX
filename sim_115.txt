@@ -1,0 +1,99 @@
+Created At: 2026-10-11T01:11:22+05:30
+Completed At: 2026-10-11T01:11:22+05:30
+File Path: `file:///c:/Synapse/backend/similarity_engine.py`
+Total Lines: 333
+Total Bytes: 14205
+Showing lines 70 to 160
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+70:     """Flags if a sentence is mostly generic academic template/boilerplate."""
+71:     s_lower = sentence.lower()
+72:     for pat in GENERIC_BOILERPLATE_PATTERNS:
+73:         if re.search(pat, s_lower):
+74:             # If the sentence is short and contains boilerplate, drop it
+75:             tokens = tokenize(sentence, remove_stopwords=True)
+76:             if len(tokens) <= 5:
+77:                 return True
+78:     return False
+79: 
+80: def extract_content_words(text: str) -> set:
+81:     """Extracts non-stop, meaningful content words."""
+82:     return set(tokenize(text, remove_stopwords=True))
+83: 
+84: def compute_cosine_similarity(vec1: dict, vec2: dict) -> float:
+85:     intersection = set(vec1.keys()) & set(vec2.keys())
+86:     numerator = sum(vec1[x] * vec2[x] for x in intersection)
+87:     
+88:     sum1 = sum(v**2 for v in vec1.values())
+89:     sum2 = sum(v**2 for v in vec2.values())
+90:     denominator = math.sqrt(sum1) * math.sqrt(sum2)
+91:     
+92:     if not denominator:
+93:         return 0.0
+94:     return float(numerator / denominator)
+95: 
+96: def build_tfidf_vectors(sentences1: list, sentences2: list):
+97:     corpus = sentences1 + sentences2
+98:     doc_freq = Counter()
+99:     tokenized_docs = []
+100:     
+101:     for s in corpus:
+102:         tokens = tokenize(s, remove_stopwords=True)
+103:         unique_tokens = set(tokens)
+104:         for u in unique_tokens:
+105:             doc_freq[u] += 1
+106:         tokenized_docs.append(Counter(tokens))
+107:         
+108:     num_docs = len(corpus)
+109:     tfidf_vectors = []
+110:     for doc_counts in tokenized_docs:
+111:         vec = {}
+112:         for term, count in doc_counts.items():
+113:             tf = 1 + math.log(count) if count > 0 else 0
+114:             idf = math.log((1 + num_docs) / (1 + doc_freq[term])) + 1.0
+115:             vec[term] = tf * idf
+116:         tfidf_vectors.append(vec)
+117:         
+118:     return tfidf_vectors[:len(sentences1)], tfidf_vectors[len(sentences1):]
+119: 
+120: def compute_sequence_matcher_ratio(text1: str, text2: str) -> float:
+121:     return difflib.SequenceMatcher(None, text1.lower(), text2.lower()).ratio()
+122: 
+123: def compute_exact_token_jaccard(text1: str, text2: str) -> float:
+124:     tokens1 = set(tokenize(text1, remove_stopwords=False))
+125:     tokens2 = set(tokenize(text2, remove_stopwords=False))
+126:     if not tokens1 or not tokens2:
+127:         return 0.0
+128:     intersection = tokens1.intersection(tokens2)
+129:     union = tokens1.union(tokens2)
+130:     return float(len(intersection) / len(union))
+131: 
+132: def generate_phrase_explanation(sent_a: str, sent_b: str, match_type: str, score: float, shared_terms: list) -> str:
+133:     """Generates an in-depth explanation of why the passage pair was flagged."""
+134:     if match_type == "Exact Match":
+135:         if score >= 90:
+136:             return f"Verbatim Copy: Word-for-word copy across {len(sent_a.split())} words without alteration."
+137:         else:
+138:             return f"High Structural Copy: Nearly identical sequence with minor word substitutions. Shared key tokens: {', '.join(shared_terms[:4])}."
+139:     elif match_type == "Paraphrased / Semantic":
+140:         if len(shared_terms) <= 1:
+141:             return f"Deep Paraphrase: Idea and argument flow preserved while synonyms and altered sentence syntax were substituted (Shared concepts: {', '.join(shared_terms) if shared_terms else 'Conceptual flow'})."
+142:         else:
+143:             return f"Paraphrase with Retained Domain Anchors: Sentence restructured around key anchor words ({', '.join(shared_terms[:5])})."
+144:     return "Similar conceptual theme detected."
+145: 
+146: def analyze_document_pair(text_a: str, text_b: str, drop_common_phrases: bool = True):
+147:     sents_a = split_into_sentences(text_a)
+148:     sents_b = split_into_sentences(text_b)
+149: 
+150:     # Filter out pure boilerplate sentences if drop_common_phrases is enabled
+151:     if drop_common_phrases:
+152:         sents_a_filtered = [s for s in sents_a if not is_predominantly_boilerplate(s)]
+153:         sents_b_filtered = [s for s in sents_b if not is_predominantly_boilerplate(s)]
+154:         if sents_a_filtered: sents_a = sents_a_filtered
+155:         if sents_b_filtered: sents_b = sents_b_filtered
+156: 
+157:     if not sents_a or not sents_b:
+158:         return {
+159:             "overall_similarity": 0.0,
+160:             "exact_similarity": 0.0,
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

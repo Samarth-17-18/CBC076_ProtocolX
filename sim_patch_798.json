@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Feed entire batch submissions as background corpus benchmark in analyze_batch_submissions",
+  "EndLine": 375,
+  "Instruction": "In analyze_batch_submissions, pass all other submissions in the batch as the background corpus benchmark to analyze_document_pair, ensuring assignment-wide vocabulary is benchmarked and discounted from similarity scoring.",
+  "ReplacementContent": "    all_pairs = []\n    scores = []\n    # Collect all submission contents to form the batch benchmark reference corpus\n    batch_benchmark_texts = [sub[\"content\"] for sub in submissions if sub.get(\"content\")]\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            sub_a = submissions[i]\n            sub_b = submissions[j]\n            # Provide batch benchmark corpus to discount assignment-wide common terms\n            res = analyze_document_pair(\n                sub_a[\"content\"], \n                sub_b[\"content\"], \n                drop_common_phrases=drop_common_phrases,\n                background_corpus=batch_benchmark_texts\n            )\n            score = res[\"overall_similarity\"]\n            scores.append(score)\n            all_pairs.append({\n                \"sub_a_id\": sub_a.get(\"id\", i),\n                \"sub_a_title\": sub_a.get(\"title\", f\"Doc {i+1}\"),\n                \"sub_b_id\": sub_b.get(\"id\", j),\n                \"sub_b_title\": sub_b.get(\"title\", f\"Doc {j+1}\"),",
+  "StartLine": 355,
+  "TargetContent": "    all_pairs = []\n    scores = []\n\n    for i in range(n):\n        for j in range(i + 1, n):\n            sub_a = submissions[i]\n            sub_b = submissions[j]\n            res = analyze_document_pair(sub_a[\"content\"], sub_b[\"content\"], drop_common_phrases=drop_common_phrases)\n            score = res[\"overall_similarity\"]\n            scores.append(score)\n            all_pairs.append({\n                \"sub_a_id\": sub_a.get(\"id\", i),\n                \"sub_a_title\": sub_a.get(\"title\", f\"Doc {i+1}\"),\n                \"sub_b_id\": sub_b.get(\"id\", j),\n                \"sub_b_title\": sub_b.get(\"title\", f\"Doc {j+1}\"),",
+  "TargetFile": "c:\\Synapse\\backend\\similarity_engine.py",
+  "toolAction": "Passing batch benchmark texts to analyze_batch_submissions",
+  "toolSummary": "Update analyze_batch_submissions with benchmark corpus"
+}

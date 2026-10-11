@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Integrate ProtocolX fine-tuned model inference into similarity_engine.py",
+  "EndLine": 60,
+  "Instruction": "Add ProtocolX PlagiarismScorer loading to similarity_engine.py",
+  "ReplacementContent": "from .ml_learner import ml_model\n\n# Load fine-tuned ProtocolX model if available\nprotocolx_scorer = None\ntry:\n    import sys, os\n    model_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), \"..\", \"model\"))\n    if os.path.exists(os.path.join(model_dir, \"protocolx-encoder\")) and os.path.exists(os.path.join(model_dir, \"scorer.joblib\")):\n        sys.path.insert(0, model_dir)\n        from protocolx_inference import PlagiarismScorer\n        protocolx_scorer = PlagiarismScorer(model_dir)\n        print(\"ProtocolX PlagiarismScorer initialized successfully.\")\nexcept Exception as e:\n    print(f\"Warning: Could not load ProtocolX scorer ({e}). Falling back to algorithmic engine.\")\n\ndef get_active_stopwords():\n    custom = set(ml_model.data.get(\"learned_stopwords\", []))\n    return STOPWORDS.union(custom)",
+  "StartLine": 47,
+  "TargetContent": "from .ml_learner import ml_model\n\ndef get_active_stopwords():\n    custom = set(ml_model.data.get(\"learned_stopwords\", []))\n    return STOPWORDS.union(custom)",
+  "TargetFile": "c:\\Synapse\\backend\\similarity_engine.py",
+  "toolAction": "Importing ProtocolX model into similarity engine",
+  "toolSummary": "Add ProtocolX scorer initialization in similarity_engine.py"
+}

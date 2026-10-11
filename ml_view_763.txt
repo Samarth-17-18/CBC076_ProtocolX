@@ -1,0 +1,88 @@
+Created At: 2026-10-11T03:35:11+05:30
+Completed At: 2026-10-11T03:35:11+05:30
+File Path: `file:///c:/Synapse/backend/ml_learner.py`
+Total Lines: 142
+Total Bytes: 5131
+Showing lines 1 to 80
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import os
+2: import json
+3: import math
+4: from datetime import datetime
+5: 
+6: MODEL_WEIGHTS_FILE = "synapse_ml_weights.json"
+7: 
+8: DEFAULT_WEIGHTS = {
+9:     "version": 1,
+10:     "total_feedback_samples": 0,
+11:     "weights": {
+12:         "w_exact": 0.45,
+13:         "w_semantic": 0.35,
+14:         "w_coverage": 0.20
+15:     },
+16:     "calibration_bias": 0.0,
+17:     "learned_stopwords": [],
+18:     "recent_updates": []
+19: }
+20: 
+21: class ActiveLearningClassifier:
+22:     """
+23:     Online Learning Classifier using Stochastic Gradient Descent (SGD) 
+24:     with Logistic/Cross-Entropy Loss to adapt similarity scoring based on
+25:     human reviewer verdicts ('Cleared' vs 'Flagged').
+26:     """
+27:     def __init__(self, filepath=MODEL_WEIGHTS_FILE):
+28:         self.filepath = filepath
+29:         self.learning_rate = 0.05
+30:         self.data = self._load_weights()
+31: 
+32:     def _load_weights(self):
+33:         if os.path.exists(self.filepath):
+34:             try:
+35:                 with open(self.filepath, "r") as f:
+36:                     return json.load(f)
+37:             except Exception:
+38:                 pass
+39:         return DEFAULT_WEIGHTS.copy()
+40: 
+41:     def _save_weights(self):
+42:         with open(self.filepath, "w") as f:
+43:             json.dump(self.data, f, indent=2)
+44: 
+45:     def get_weights(self):
+46:         return self.data["weights"]
+47: 
+48:     def predict_calibrated_score(self, exact_pct: float, semantic_pct: float, coverage_pct: float) -> dict:
+49:         """
+50:         Infers similarity using current trained weights and calibration bias.
+51:         Formula: sigmoid(w_exact * x1 + w_semantic * x2 + w_cov * x3 + bias)
+52:         """
+53:         w = self.data["weights"]
+54:         bias = self.data.get("calibration_bias", 0.0)
+55: 
+56:         # Normalized inputs [0, 1]
+57:         x1 = exact_pct / 100.0
+58:         x2 = semantic_pct / 100.0
+59:         x3 = coverage_pct / 100.0
+60: 
+61:         linear_comb = (w["w_exact"] * x1) + (w["w_semantic"] * x2) + (w["w_coverage"] * x3) + bias
+62:         # Clamp linear combination
+63:         linear_comb = max(-10.0, min(10.0, linear_comb))
+64:         
+65:         # Softmax / Sigmoidal probability
+66:         ml_prob = 1.0 / (1.0 + math.exp(-4.0 * (linear_comb - 0.5)))
+67:         ml_score = round(ml_prob * 100.0, 1)
+68: 
+69:         return {
+70:             "ml_calibrated_similarity": ml_score,
+71:             "current_weights": w,
+72:             "training_samples": self.data["total_feedback_samples"],
+73:             "model_version": f"v{self.data['version']}"
+74:         }
+75: 
+76:     def learn_from_reviewer_feedback(self, exact_pct: float, semantic_pct: float, coverage_pct: float, verdict: str, shared_terms: list = None):
+77:         """
+78:         Updates weights through Online Reinforcement / Gradient Descent:
+79:         - If verdict is 'Flagged': target = 1.0 (Plagiarism true positive)
+80:         - If verdict is 'Cleared': target = 0.0 (False positive / benign match)
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

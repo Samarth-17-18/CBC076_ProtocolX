@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Add explicit Indicator Notice banner and Reviewer Decision workflow badge to synapse.html report screen",
+  "EndLine": 168,
+  "Instruction": "Add indicator notice card and reviewer badge to v-rep section in synapse.html",
+  "ReplacementContent": "  <div class=\"row\" style=\"margin:22px 0 8px\">\n    <span class=\"mono\">Exclude:</span>\n    <div class=\"sw\" style=\"border:0;padding:0;gap:8px\"><span>citations</span><button id=\"xc\" class=\"on\"></button></div>\n    <div class=\"sw\" style=\"border:0;padding:0;gap:8px\"><span>quotes</span><button id=\"xq\"></button></div>\n    <span class=\"chip\" id=\"ind-banner\" style=\"background:var(--sky);margin-left:auto;font-size:11px\">\u2696 Human Review Indicator \u00b7 Not Proof of Misconduct</span>\n  </div>",
+  "StartLine": 163,
+  "TargetContent": "  <div class=\"row\" style=\"margin:22px 0 8px\">\n    <span class=\"mono\">Exclude:</span>\n    <div class=\"sw\" style=\"border:0;padding:0;gap:8px\"><span>citations</span><button id=\"xc\" class=\"on\"></button></div>\n    <div class=\"sw\" style=\"border:0;padding:0;gap:8px\"><span>quotes</span><button id=\"xq\"></button></div>\n  </div>",
+  "TargetFile": "c:\\Synapse\\uiux\\user\\synapse.html",
+  "toolAction": "Adding indicator banner to user report screen",
+  "toolSummary": "Add indicator badge in synapse.html"
+}

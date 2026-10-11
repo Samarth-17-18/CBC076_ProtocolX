@@ -1,0 +1,12 @@
+{
+  "AllowMultiple": false,
+  "Description": "Update user nav button to My submissions",
+  "EndLine": 123,
+  "Instruction": "Change nav tab label from 'My reports' to 'My submissions'.",
+  "ReplacementContent": "  <div class=\"logo\" onclick=\"go(user?'work':'login')\"><i></i>synapse</div>\n  <nav id=\"nav\"><button data-v=\"work\">Workspace</button><button data-v=\"hist\">My submissions</button></nav>\n  <div id=\"who\"><div class=\"av\" id=\"av\">S</div><button class=\"btn pink\" style=\"padding:8px 14px;font-size:14px\" onclick=\"state('out')\">Sign out</button></div>\n</header>",
+  "StartLine": 118,
+  "TargetContent": "  <div class=\"logo\" onclick=\"go(user?'work':'login')\"><i></i>synapse</div>\n  <nav id=\"nav\"><button data-v=\"work\">Workspace</button><button data-v=\"hist\">My reports</button></nav>\n  <div id=\"who\"><div class=\"av\" id=\"av\">S</div><button class=\"btn pink\" style=\"padding:8px 14px;font-size:14px\" onclick=\"state('out')\">Sign out</button></div>\n</header>",
+  "TargetFile": "c:\\Synapse\\uiux\\user\\synapse.html",
+  "toolAction": "Updating nav label in synapse.html",
+  "toolSummary": "Change nav button to My submissions in synapse.html"
+}
