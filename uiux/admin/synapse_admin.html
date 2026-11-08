@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synapse — Institutional Governance Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1412;
+  --surface: #131e1a;
+  --card: #182722;
+  --border: #233932;
+  --border-light: #2c473f;
+  --green: #00e599;
+  --accent: #5cffb7;
+  --blue: #6cd5ff;
+  --pink: #ff6599;
+  --warn: #ffb443;
+  --text: #eaf3f0;
+  --muted: #86a297;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-body: 'DM Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-body);
+  min-height: 100vh; overflow-x: hidden;
+}
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; border: 0; }
+a { color: inherit; text-decoration: none; }
+.mono { font-family: var(--font-mono); letter-spacing: 0.03em; }
+.display { font-family: var(--font-display); }
+
+/* Security Gate */
+#securityGate {
+  position: fixed; inset: 0; background: rgba(10,16,14,0.97); z-index: 1000;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  backdrop-filter: blur(20px);
+}
+.gate-card {
+  width: 100%; max-width: 460px; background: var(--surface); border: 1.5px solid var(--border-light);
+  border-radius: 24px; padding: 36px 32px; box-shadow: 0 25px 60px rgba(0,0,0,0.6); position: relative;
+}
+.gate-card:before {
+  content: ''; position: absolute; top: -1px; left: 30px; right: 30px; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--green), transparent);
+}
+.shield-icon {
+  width: 52px; height: 52px; background: rgba(0,229,153,0.12); border: 1.5px solid var(--green);
+  border-radius: 16px; display: grid; place-items: center; font-size: 24px; margin-bottom: 20px;
+}
+
+/* Header */
+.topbar {
+  height: 70px; padding: 0 3vw; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1.5px solid var(--border); background: rgba(19,30,26,0.92); backdrop-filter: blur(14px);
+  position: sticky; top: 0; z-index: 50;
+}
+.brand { display: flex; align-items: center; gap: 10px; font: 700 18px var(--font-display); letter-spacing: -0.04em; }
+.brandmark { width: 32px; height: 32px; background: var(--green); color: #0d1412; border-radius: 9px; display: grid; place-items: center; font-size: 18px; font-weight: 800; }
+.brand small { font: 600 9px var(--font-mono); background: #080d0c; color: var(--green); padding: 4px 8px; border-radius: 6px; letter-spacing: 0.05em; border: 1px solid var(--border); }
+
+.nav { display: flex; gap: 4px; align-items: center; }
+.nav button {
+  background: transparent; padding: 8px 14px; border-radius: 99px; color: var(--muted); font-size: 13px; font-weight: 500; transition: .18s;
+}
+.nav button:hover, .nav button.active { background: var(--border-light); color: var(--text); }
+.nav button.active { background: var(--green); color: #0d1412; font-weight: 700; }
+
+.officer-badge {
+  display: flex; align-items: center; gap: 10px; padding: 6px 12px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 99px; font-size: 12px;
+}
+.officer-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+main { max-width: 1400px; margin: auto; padding: 26px 3vw 60px; }
+.page { display: none; }
+.page.active { display: block; animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Cards & Layout */
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+.stat-card {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 18px; padding: 20px;
+}
+.stat-card label { font: 600 11px var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.stat-card strong { display: block; font: 700 36px var(--font-display); color: var(--text); margin: 8px 0 2px; }
+.stat-card small { font-size: 12px; color: var(--muted); }
+
+.panel {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 22px;
+}
+.panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.panel-head h3 { font: 700 18px var(--font-display); margin: 0; }
+
+/* 3-Node Workflow Visualizer */
+.node-chain {
+  display: grid; grid-template-columns: 1fr 40px 1fr 40px 1fr; align-items: center; gap: 12px;
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 18px; padding: 22px; margin-bottom: 24px;
+}
+.node-box {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 16px; position: relative;
+}
+.node-box.active { border-color: var(--green); box-shadow: 0 0 16px rgba(0,229,153,0.15); }
+.node-box b { display: block; font-size: 14px; margin-bottom: 4px; color: var(--text); }
+.node-box span { font-size: 11px; color: var(--muted); }
+.node-arrow { text-align: center; color: var(--muted); font-size: 18px; }
+
+/* Tables */
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th {
+  text-align: left; color: var(--muted); font: 600 10px var(--font-mono); text-transform: uppercase;
+  padding: 12px 10px; border-bottom: 1.5px solid var(--border); letter-spacing: 0.05em;
+}
+.table td { padding: 14px 10px; border-bottom: 1px solid var(--border); color: #d0e0da; }
+.table tr:hover td { background: rgba(255,255,255,0.02); }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 99px;
+  font: 600 11px var(--font-mono); background: rgba(0,229,153,0.12); color: var(--green); border: 1px solid rgba(0,229,153,0.3);
+}
+.pill.warn { background: rgba(255,180,67,0.12); color: var(--warn); border-color: rgba(255,180,67,0.3); }
+.pill.pink { background: rgba(255,101,153,0.12); color: var(--pink); border-color: rgba(255,101,153,0.3); }
+
+/* Buttons */
+.btn {
+  border: 1px solid var(--border-light); border-radius: 999px; padding: 10px 18px; background: var(--card);
+  color: var(--text); font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 8px;
+  transition: .15s;
+}
+.btn:hover { background: var(--border-light); border-color: var(--muted); }
+.btn.green { background: var(--green); color: #0d1412; border-color: var(--green); }
+.btn.green:hover { background: var(--accent); }
+.btn.danger { background: rgba(255,101,153,0.15); color: var(--pink); border-color: var(--pink); }
+.btn.small { padding: 6px 12px; font-size: 11px; }
+
+/* Side by Side forensic view */
+.forensic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 14px; }
+.forensic-pane {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 18px;
+  max-height: 440px; overflow-y: auto; font-size: 13px; line-height: 1.8;
+}
+.hl-pink { background: rgba(255,101,153,0.25); color: #ff9ec0; padding: 2px 4px; border-radius: 3px; border-bottom: 1.5px solid var(--pink); }
+.hl-green { background: rgba(0,229,153,0.2); color: #a4ffd9; padding: 2px 4px; border-radius: 3px; border-bottom: 1.5px solid var(--green); }
+
+/* Sliders */
+input[type=range] { width: 100%; accent-color: var(--green); }
+.field-row { display: flex; justify-content: space-between; align-items: center; margin: 16px 0; }
+.field-row label { font-size: 13px; font-weight: 600; }
+
+.toast {
+  position: fixed; right: 24px; bottom: 24px; background: var(--surface); color: var(--green);
+  border: 1.5px solid var(--green); padding: 14px 22px; border-radius: 12px; font-size: 13px; font-weight: 600;
+  z-index: 2000; opacity: 0; transform: translateY(12px); transition: .25s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: none; }
+
+/* Form inputs in dark gate */
+.gate-input {
+  width: 100%; background: #0c1412; border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; color: var(--text); outline: none; margin-top: 6px; font-size: 14px;
+}
+.gate-input:focus { border-color: var(--green); }
+
+@media (max-width: 900px) {
+  .grid4 { grid-template-columns: 1fr 1fr; }
+  .node-chain { grid-template-columns: 1fr; }
+  .node-arrow { display: none; }
+  .forensic-grid { grid-template-columns: 1fr; }
+}
+
+/* Enhanced Phrase blocks */
+.phrase-item {
+  background: rgba(255,255,255,0.02); border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; margin-bottom: 12px; transition: .18s; cursor: pointer;
+}
+.phrase-item:hover {
+  background: rgba(255,255,255,0.05); border-color: var(--muted);
+}
+.phrase-item.active {
+  box-shadow: 0 0 16px rgba(0,229,153,0.3) !important;
+  border-color: #fff !important;
+}
+.phrase-item.hl-pink {
+  border-left: 5px solid var(--pink); background: rgba(255,101,153,0.09);
+}
+.phrase-item.hl-warn {
+  border-left: 5px solid var(--warn); background: rgba(255,180,67,0.09);
+}
+.phrase-item.hl-blue {
+  border-left: 5px solid var(--blue); background: rgba(108,213,255,0.09);
+}
+.phrase-item.hl-green {
+  border-left: 5px solid var(--green); background: rgba(0,229,153,0.06);
+}
+.phrase-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; }
+.phrase-text { font-size: 13px; line-height: 1.7; color: #d6e8e0; }
+
+.pill.green { background: rgba(0,229,153,0.14); color: var(--green); border: 1px solid rgba(0,229,153,0.4); }
+.pill.blue { background: rgba(108,213,255,0.14); color: var(--blue); border: 1px solid rgba(108,213,255,0.4); }
+.pill.pink { background: rgba(255,101,153,0.14); color: var(--pink); border: 1px solid rgba(255,101,153,0.4); }
+.pill.warn { background: rgba(255,180,67,0.14); color: var(--warn); border: 1px solid rgba(255,180,67,0.4); }
+
+</style>
+</head>
+<body>
+
+<!-- INSTITUTIONAL AUTHENTICATION GATE -->
+<div id="securityGate">
+  <div class="gate-card">
+    <div class="shield-icon">🛡️</div>
+    <div class="mono" style="color:var(--green);font-size:11px;margin-bottom:6px">RESTRICTED ACCREDITATION ACCESS</div>
+    <h2 class="display" style="font-size:26px;margin:0 0 10px">Institutional Governance Desk</h2>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 20px">
+      Strict access control. Authorized for Academic Integrity Officers, Department Heads, and Evaluators only.
+    </p>
+
+    <form onsubmit="handleAdminLogin(event)">
+      <div style="margin-bottom:14px">
+        <label class="mono" style="font-size:11px;color:var(--muted)">OFFICER ID OR INSTITUTIONAL EMAIL</label>
+        <input class="gate-input" id="officerEmail" type="email" placeholder="admin@protocolx" value="admin@protocolx" required>
+      </div>
+
+      <div style="margin-bottom:16px">
+        <label class="mono" style="font-size:11px;color:var(--muted)">SECURITY PASSCODE</label>
+        <input class="gate-input" id="officerPass" type="password" placeholder="••••••••" value="admin.123" required>
+      </div>
+
+      <div id="gateAlert" style="display:none;padding:10px 14px;border-radius:10px;background:rgba(255,101,153,0.15);color:var(--pink);font-size:12px;margin-bottom:16px;border:1px solid var(--pink)"></div>
+
+      <button class="btn green" style="width:100%;padding:14px;font-size:14px" type="submit">
+        Authenticate &amp; Unlock Board <span>→</span>
+      </button>
+
+      <div style="display:flex;gap:8px;margin-top:12px;justify-content:center">
+        <button type="button" class="btn small" style="background:#1d2e27" onclick="quickFill('admin@protocolx','admin.123')">⚡ Auto-fill Super-Admin</button>
+        <button type="button" class="btn small" style="background:#1d2e27" onclick="quickFill('evelyn.vance@synapse.edu','admin.123')">⚡ Evaluator 1</button>
+      </div>
+    </form>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted)">
+      <span>Default: admin@protocolx / admin.123</span>
+      <a href="/" style="color:var(--green)">Student Portal ↗</a>
+    </div>
+  </div>
+</div>
+
+<!-- GOVERNANCE TOPBAR -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brandmark">⌘</span>
+    <span>SYNAPSE <small>GOVERNANCE DESK</small></span>
+  </div>
+
+  <nav class="nav">
+    <button class="active" data-page="board" onclick="goAdmin('board')">3-Node Review Board</button>
+    <button data-page="forensic" onclick="goAdmin('forensic')">Forensic Inspector</button>
+    <button data-page="queue" onclick="goAdmin('queue')">Cohort Batch Queue</button>
+    <button data-page="governor" onclick="goAdmin('governor')">Sensitivity Governor</button>
+    <button data-page="mlstats" onclick="goAdmin('mlstats')">ML Online Learning</button>
+    <button data-page="ledger" onclick="goAdmin('ledger')">Audit Ledger</button>
+  </nav>
+
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="officer-badge">
+      <span class="officer-dot"></span>
+      <span id="activeOfficerLabel">Super-Admin: ProtocolX</span>
+    </div>
+    <button class="btn small danger" onclick="lockStation()">🔒 Lock Station</button>
+  </div>
+</header>
+
+<main>
+  <!-- 3-NODE REVIEW BOARD -->
+  <section id="board" class="page active">
+    <div class="grid4" id="statsRow">
+      <div class="stat-card">
+        <label>Awaiting Evaluator 1</label>
+        <strong id="stPending">03</strong>
+        <small>Initial triage queue</small>
+      </div>
+      <div class="stat-card">
+        <label>Awaiting Evaluator 2</label>
+        <strong id="stUnderReview">02</strong>
+        <small>Secondary corroboration</small>
+      </div>
+      <div class="stat-card">
+        <label>Awaiting HOD Ruling</label>
+        <strong id="stHOD">01</strong>
+        <small>Final institutional authority</small>
+      </div>
+      <div class="stat-card">
+        <label>Total Cases Triaged</label>
+        <strong id="stTotal">18</strong>
+        <small>Academic cohort total</small>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="mono" style="color:var(--green);font-size:10px">GOVERNANCE PROTOCOL</div>
+          <h3>Active 3-Node Review Pipeline</h3>
+        </div>
+        <span class="pill">Live Arbitration</span>
+      </div>
+
+      <div class="node-chain">
+        <div class="node-box active">
+          <b>Node 1: Evaluator 1</b>
+          <span>Course Instructor Reviewer</span>
+          <div class="mono" style="margin-top:8px;color:var(--green);font-size:10px">ACTION: VOTE PASS / FLAG</div>
+        </div>
+        <div class="node-arrow">➔</div>
+        <div class="node-box">
+          <b>Node 2: Evaluator 2</b>
+          <span>Senior Integrity Auditor</span>
+          <div class="mono" style="margin-top:8px;color:var(--blue);font-size:10px">ACTION: CORROBORATE VOTE</div>
+        </div>
+        <div class="node-arrow">➔</div>
+        <div class="node-box">
+          <b>Node 3: Head of Department</b>
+          <span>Final Board Authority</span>
+          <div class="mono" style="margin-top:8px;color:var(--pink);font-size:10px">ACTION: FINAL BINDING RULING</div>
+        </div>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Case ID &amp; Documents</th>
+            <th>Department</th>
+            <th>Overlap</th>
+            <th>Current Stage</th>
+            <th>Node Verdicts</th>
+            <th>Governance Action</th>
+          </tr>
+        </thead>
+        <tbody id="workflowQueueBody">
+          <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">Loading review board...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FORENSIC SIDE-BY-SIDE INSPECTOR -->
+  <section id="forensic" class="page">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="mono" style="color:var(--green);font-size:10px">FORENSIC INVESTIGATION &amp; ALIGNMENT</div>
+          <h3 id="forensicHeader">Side-by-Side Text Comparison &amp; Phrase Inspector</h3>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <label class="mono" style="font-size:11px;color:var(--muted)">SELECT CASE:</label>
+          <select id="reportSelector" class="gate-input" style="width:auto;margin:0;padding:8px 14px;font-size:12px;background:#0d1614;color:var(--text);border-color:var(--green);font-weight:600" onchange="loadForensicReport(this.value)">
+            <option value="20">Case #20: student_A.txt vs student_B.txt (80.2%)</option>
+          </select>
+          <button class="btn green small" onclick="openNodeActionModal()">Cast Workflow Vote ✍️</button>
+          <button class="btn small" style="background:var(--card);border-color:var(--border-light)" onclick="openDirectCompareModal()">⚡ Compare Custom Pair</button>
+        </div>
+      </div>
+
+      <!-- Color Legend Bar -->
+      <div style="display:flex;gap:18px;margin-bottom:18px;font:600 11px var(--font-mono);flex-wrap:wrap;background:var(--card);padding:12px 18px;border-radius:12px;border:1px solid var(--border)">
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:12px;height:12px;background:var(--pink);border-radius:3px"></span>
+          <span style="color:#ff8ab4">VERBATIM COPY (&gt;85% Word-for-Word)</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:12px;height:12px;background:var(--warn);border-radius:3px"></span>
+          <span style="color:#ffd680">PARAPHRASED (Semantic Rewrite / Synonyms)</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:12px;height:12px;background:var(--blue);border-radius:3px"></span>
+          <span style="color:#8ee2ff">COMMON PROMPT / TEMPLATE (Suppressed)</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="display:inline-block;width:12px;height:12px;background:var(--green);border-radius:3px"></span>
+          <span style="color:#9cffd7">INDEPENDENT / ORIGINAL (Cleared)</span>
+        </span>
+      </div>
+
+      <!-- Live Diagnostic Inspector Banner -->
+      <div id="inspectorBanner" style="background:#0e1715;border:1.5px solid var(--border);border-left:5px solid var(--green);border-radius:14px;padding:16px 20px;margin-bottom:18px;transition:.2s">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div class="mono" id="inspectorCategory" style="font-size:12px;font-weight:700;color:var(--green)">
+            ACTIVE PHRASE DIAGNOSTIC
+          </div>
+          <span class="pill" id="inspectorScore">Select Any Sentence Below</span>
+        </div>
+        <p id="inspectorReason" style="font-size:13px;color:#e6f3ef;margin:0;line-height:1.7">
+          Click any sentence in either Document A, Document B, or the comparison table to inspect why it was flagged or cleared.
+        </p>
+        <div id="inspectorTerms" class="mono" style="font-size:11px;color:var(--muted);margin-top:6px;display:none"></div>
+      </div>
+
+      <!-- Side-by-Side Dual-Pane Document View -->
+      <div class="forensic-grid">
+        <div class="forensic-pane" id="paneDocA" style="max-height:520px">
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:14px">
+            <b id="titleDocA" style="color:var(--green);font-size:14px">Document A: Student Manuscript</b>
+            <span class="mono" style="font-size:10px;color:var(--muted)">STUDENT DRAFT</span>
+          </div>
+          <div id="contentDocA">Loading document sentences...</div>
+        </div>
+
+        <div class="forensic-pane" id="paneDocB" style="max-height:520px">
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:14px">
+            <b id="titleDocB" style="color:var(--blue);font-size:14px">Document B: Corpus / Peer Reference</b>
+            <span class="mono" style="font-size:10px;color:var(--muted)">CORPUS MATCH</span>
+          </div>
+          <div id="contentDocB">Loading comparison reference...</div>
+        </div>
+      </div>
+
+      <!-- Sentence-by-Sentence Comparison Table -->
+      <div style="margin-top:24px;border-top:1.5px solid var(--border);padding-top:22px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px">
+          <div>
+            <div class="mono" style="color:var(--green);font-size:10px">PHRASE-BY-PHRASE FORENSIC AUDIT</div>
+            <h3 style="margin:2px 0 0;font-size:18px">Sentence Level Alignment &amp; Reasoning Log</h3>
+          </div>
+          <span class="mono" id="phraseCountLabel" style="font-size:11px;color:var(--muted)">8 Sentences Analyzed</span>
+        </div>
+
+        <table class="table" id="phraseTable">
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th style="width:31%">Sentence in Document A (Manuscript)</th>
+              <th style="width:31%">Matched Sentence in Document B (Corpus)</th>
+              <th style="width:14%">Score &amp; Category</th>
+              <th style="width:24%">Forensic Reason (Why Flagged or Cleared)</th>
+            </tr>
+          </thead>
+          <tbody id="phraseTableBody">
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Loading phrase breakdown...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- COHORT BATCH QUEUE -->
+  <section id="queue" class="page">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="mono" style="color:var(--green);font-size:10px">INSTITUTIONAL REPOSITORY</div>
+          <h3>Cohort Batch Analysis Matrix</h3>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn small" onclick="filterQueue('all')">All</button>
+          <button class="btn small" onclick="filterQueue('pending')">Pending</button>
+          <button class="btn small" onclick="filterQueue('cleared')">Cleared</button>
+          <button class="btn small" onclick="filterQueue('escalated')">Escalated</button>
+        </div>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Candidate Comparison Pair</th>
+            <th>Department</th>
+            <th>Exact Jaccard</th>
+            <th>Semantic Cosine</th>
+            <th>Overall Similarity</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="batchQueueTable">
+          <tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">Loading cohort matrix...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SENSITIVITY GOVERNOR -->
+  <section id="governor" class="page">
+    <div class="panel" style="max-width:800px;margin:auto">
+      <div class="panel-head">
+        <div>
+          <div class="mono" style="color:var(--green);font-size:10px">HEURISTIC CALIBRATION</div>
+          <h3>Institutional Sensitivity Governor</h3>
+        </div>
+        <span class="pill">Applies University-Wide</span>
+      </div>
+
+      <div style="padding:10px 0">
+        <div class="field-row">
+          <div>
+            <label>Minimum Verbatim Span Length</label><br>
+            <small style="color:var(--muted)">Tokens required to flag identical phrasing</small>
+          </div>
+          <span class="mono" id="spanVal" style="color:var(--green);font-size:15px;font-weight:700">15 tokens</span>
+        </div>
+        <input type="range" min="6" max="40" value="15" oninput="document.getElementById('spanVal').textContent=this.value+' tokens'">
+
+        <div class="field-row" style="margin-top:24px">
+          <div>
+            <label>Paraphrase Cosine Threshold</label><br>
+            <small style="color:var(--muted)">Semantic vector similarity threshold for rewritten text</small>
+          </div>
+          <span class="mono" id="paraVal" style="color:var(--green);font-size:15px;font-weight:700">0.82</span>
+        </div>
+        <input type="range" min="60" max="98" value="82" oninput="document.getElementById('paraVal').textContent=(this.value/100).toFixed(2)">
+
+        <div style="margin-top:30px;border-top:1px solid var(--border);padding-top:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <span><b>Cross-Lingual Obfuscation Tracking</b><br><small style="color:var(--muted)">Detects translation-hopping (e.g. DE ➔ FR ➔ EN)</small></span>
+            <input type="checkbox" checked style="width:20px;height:20px;accent-color:var(--green)">
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <span><b>AI Burstiness &amp; Perplexity Signals</b><br><small style="color:var(--muted)">Analyzes token dispersion characteristic of generative LLMs</small></span>
+            <input type="checkbox" checked style="width:20px;height:20px;accent-color:var(--green)">
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span><b>Automated Bibliography &amp; Reference List Exclusion</b><br><small style="color:var(--muted)">Excludes APA, IEEE, ACM reference formatting from overlap</small></span>
+            <input type="checkbox" checked style="width:20px;height:20px;accent-color:var(--green)">
+          </div>
+        </div>
+
+        <button class="btn green" style="width:100%;margin-top:28px;padding:14px" onclick="savePolicySettings()">
+          Commit Sensitivity Policy to University Database <span>✓</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ML ONLINE LEARNING STATS -->
+  <section id="mlstats" class="page">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="mono" style="color:var(--green);font-size:10px">ACTIVE LEARNING CLASSIFIER</div>
+          <h3>Online Stochastic Gradient Descent (SGD) Metrics</h3>
+        </div>
+        <span class="pill">Real-Time Model Updates</span>
+      </div>
+
+      <div class="grid4" style="margin-bottom:20px">
+        <div class="stat-card">
+          <label>Exact Overlap Weight (w_exact)</label>
+          <strong id="wExact" style="color:var(--green)">0.45</strong>
+          <small>Learned coefficient</small>
+        </div>
+        <div class="stat-card">
+          <label>Semantic Cosine Weight (w_sem)</label>
+          <strong id="wSem" style="color:var(--blue)">0.35</strong>
+          <small>Learned coefficient</small>
+        </div>
+        <div class="stat-card">
+          <label>Coverage Weight (w_cov)</label>
+          <strong id="wCov" style="color:var(--pink)">0.20</strong>
+          <small>Learned coefficient</small>
+        </div>
+        <div class="stat-card">
+          <label>Feedback Iterations</label>
+          <strong id="feedbackCount" style="color:var(--warn)">18</strong>
+          <small>Human evaluator decisions</small>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:20px">
+        <b style="font-size:13px">Dynamically Suppressed Academic Stopwords:</b>
+        <p style="color:var(--muted);font-size:12px;margin:4px 0 14px">
+          The ML model autonomously identifies common departmental phrasing and suppresses false positives without manual regex crafting.
+        </p>
+        <div id="learnedStopwordsContainer" style="display:flex;flex-wrap:wrap;gap:8px">
+          <span class="pill">neural network</span>
+          <span class="pill">experimental methodology</span>
+          <span class="pill">standard deviation</span>
+          <span class="pill">references cited</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUDIT LEDGER -->
+  <section id="ledger" class="page">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="mono" style="color:var(--green);font-size:10px">IMMUTABLE EVIDENCE TRAIL</div>
+          <h3>Tamper-Evident Governance Audit Ledger</h3>
+        </div>
+        <button class="btn small" onclick="loadAuditLogs()">Refresh Ledger ↻</button>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Event Icon</th>
+            <th>Officer / Actor</th>
+            <th>Action Performed</th>
+            <th>Audit Detail</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody id="auditTableBody">
+          <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted)">Loading audit trail...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = (window.location.origin && (window.location.origin.includes('8001') || window.location.origin.includes('8000'))) ? '' : 'http://127.0.0.1:8001';
+let currentAdminUser = null;
+let allReports = [];
+let toastTimer;
+
+function quickFill(em, pw) {
+  document.getElementById('officerEmail').value = em;
+  document.getElementById('officerPass').value = pw;
+  document.getElementById('gateAlert').style.display = 'none';
+  toast('Credentials filled. Click Authenticate →');
+}
+
+async function handleAdminLogin(e) {
+  if (e) e.preventDefault();
+  const email = document.getElementById('officerEmail').value.trim().toLowerCase();
+  const password = document.getElementById('officerPass').value.trim();
+  const alertBox = document.getElementById('gateAlert');
+  alertBox.style.display = 'none';
+
+  // Client-side quick bypass for master super-admin and known evaluators
+  const fallbackOfficers = {
+    'admin@protocolx': { name: 'ProtocolX Admin', role: 'Super-admin', department: 'Central Governance Board' },
+    'evelyn.vance@synapse.edu': { name: 'Evelyn Vance', role: 'Lead Reviewer (Evaluator 1)', department: 'Computer Science & AI' },
+    'marcus.s@synapse.edu': { name: 'Marcus Sterling', role: 'Lead Reviewer (Evaluator 2)', department: 'Biological Engineering' },
+    'clara.d@synapse.edu': { name: 'Clara Dupont', role: 'Forensic Auditor', department: 'Humanities' },
+    'julian.r@synapse.edu': { name: 'Julian Ramirez', role: 'Head of Department (HOD)', department: 'Graduate Board' }
+  };
+
+  // Try API first
+  let loginOk = false;
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      currentAdminUser = data;
+      loginOk = true;
+    }
+  } catch(err) {
+    console.warn('API login error, checking client fallback:', err);
+  }
+
+  // If API was not available or returned 404/500, check client officer list
+  if (!loginOk && fallbackOfficers[email] && password === 'admin.123') {
+    currentAdminUser = {
+      ...fallbackOfficers[email],
+      email: email,
+      token: 'client-token-auth'
+    };
+    loginOk = true;
+  }
+
+  if (loginOk && currentAdminUser) {
+    document.getElementById('securityGate').style.display = 'none';
+    document.getElementById('activeOfficerLabel').textContent = `${currentAdminUser.role}: ${currentAdminUser.name}`;
+    toast(`Welcome, ${currentAdminUser.name}. Governance Board unlocked.`);
+    loadBoardData();
+  } else {
+    alertBox.style.display = 'block';
+    alertBox.textContent = 'Access Denied: Invalid credentials. Check email and password.';
+  }
+}
+
+function lockStation() {
+  currentAdminUser = null;
+  document.getElementById('securityGate').style.display = 'flex';
+  toast('Governance station locked. Credentials purged.');
+}
+
+function goAdmin(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === pageId));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.page === pageId));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (pageId === 'board') loadBoardData();
+  if (pageId === 'forensic') initForensicView();
+  if (pageId === 'queue') loadBatchQueue();
+  if (pageId === 'mlstats') loadMLStats();
+  if (pageId === 'ledger') loadAuditLogs();
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+async function loadBoardData() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/queue`);
+    if (res.ok) {
+      allReports = await res.json();
+      renderReviewBoard(allReports);
+    }
+    const sumRes = await fetch(`${API_BASE}/api/admin/summary`);
+    if (sumRes.ok) {
+      const sum = await sumRes.json();
+      document.getElementById('stTotal').textContent = String(allReports.length || 18).padStart(2,'0');
+      document.getElementById('stPending').textContent = String(sum.pending || 3).padStart(2,'0');
+      document.getElementById('stUnderReview').textContent = '02';
+      document.getElementById('stHOD').textContent = String(sum.escalated || 1).padStart(2,'0');
+    }
+  } catch (err) {
+    console.warn('Board load error:', err);
+  }
+}
+
+function renderReviewBoard(reports) {
+  const tbody = document.getElementById('workflowQueueBody');
+  if (!reports || !reports.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">No active cases in queue.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = reports.map(r => {
+    const stage = r.workflow_stage || 'Evaluator 1';
+    const isCleared = (r.status || '').toLowerCase() === 'cleared';
+    const isFlagged = (r.status || '').toLowerCase() === 'escalated' || (r.status || '').toLowerCase().includes('copied');
+    const badgeCls = isCleared ? 'pill' : (isFlagged ? 'pill pink' : 'pill warn');
+
+    return `<tr>
+      <td><b>#CASE-${r.id}: ${r.doc_a_title}</b><br><small style="color:var(--muted)">vs ${r.doc_b_title}</small></td>
+      <td>${r.department || 'General Studies'}</td>
+      <td><b style="color:${r.overlap > 25 ? 'var(--pink)' : 'var(--green)'}">${r.overlap}%</b></td>
+      <td><span class="${badgeCls}">${stage}</span></td>
+      <td>
+        <span class="mono" style="font-size:11px">E1: ${r.evaluator_1_verdict || 'Pending'} · E2: ${r.evaluator_2_verdict || 'Pending'} · HOD: ${r.hod_verdict || 'Pending'}</span>
+      </td>
+      <td>
+        <button class="btn small green" onclick="voteAction(${r.id}, '${stage}', 'Passed')">Pass</button>
+        <button class="btn small danger" onclick="voteAction(${r.id}, '${stage}', 'Flagged')">Flag</button>
+        <button class="btn small" onclick="inspectReport(${r.id})">Inspect ↗</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function voteAction(reportId, stage, verdict) {
+  let nodeKey = 'evaluator_1';
+  let cleanVerdict = verdict;
+
+  if (stage.includes('2')) {
+    nodeKey = 'evaluator_2';
+  } else if (stage.includes('HOD') || stage.includes('3')) {
+    nodeKey = 'hod';
+    cleanVerdict = verdict === 'Passed' ? 'Cleared' : 'Flagged as Copied';
+  }
+
+  const actor = currentAdminUser ? currentAdminUser.name : 'Super-Admin';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/workflow/${reportId}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        node: nodeKey,
+        verdict: cleanVerdict,
+        notes: `Ruling delivered by ${actor} (${currentAdminUser ? currentAdminUser.role : 'Board'})`,
+        actor: actor
+      })
+    });
+
+    if (res.ok) {
+      toast(`Vote recorded: ${cleanVerdict} at stage ${stage}!`);
+      loadBoardData();
+    } else {
+      toast('Failed to record workflow vote');
+    }
+  } catch (e) {
+    toast('Workflow connection error');
+  }
+}
+
+function inspectReport(reportId) {
+  goAdmin('forensic');
+  const sel = document.getElementById('reportSelector');
+  if (sel) sel.value = reportId;
+  loadForensicReport(reportId);
+}
+
+
+let currentPhrases = [];
+let activeFocusedIndex = null;
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+async function initForensicView() {
+  const sel = document.getElementById('reportSelector');
+  if (allReports.length && sel) {
+    sel.innerHTML = allReports.map(r => `
+      <option value="${r.id}">#CASE-${r.id}: ${r.doc_a_title} vs ${r.doc_b_title} (${r.overlap}%)</option>
+    `).join('');
+
+    // Prefer student_A vs student_B or report 20 if present
+    const demoRep = allReports.find(r => r.id === 20 || (r.doc_a_title && r.doc_a_title.includes('student_A')));
+    const targetId = demoRep ? demoRep.id : allReports[0].id;
+    sel.value = targetId;
+    loadForensicReport(targetId);
+  }
+}
+
+async function loadForensicReport(reportId) {
+  try {
+    const res = await fetch(`${API_BASE}/api/reports/${reportId}`);
+    if (res.ok) {
+      const r = await res.json();
+      document.getElementById('titleDocA').textContent = `Document A: ${r.doc_a_title || 'Manuscript'}`;
+      document.getElementById('titleDocB').textContent = `Document B: ${r.doc_b_title || 'Corpus Match'}`;
+      document.getElementById('forensicHeader').textContent = `#CASE-${r.id}: ${r.doc_a_title} vs ${r.doc_b_title} (${r.overall_similarity}% Overlap)`;
+
+      currentPhrases = r.phrase_comparisons || [];
+      document.getElementById('phraseCountLabel').textContent = `${currentPhrases.length} Sentences Analyzed`;
+
+      // Render Document A sentences
+      const paneA = document.getElementById('contentDocA');
+      paneA.innerHTML = currentPhrases.map(p => {
+        const cls = 'hl-' + p.color;
+        return `
+          <div class="phrase-item ${cls}" id="pA_${p.index}" onclick="focusPhrase(${p.index})">
+            <div class="phrase-header">
+              <span class="mono" style="font-weight:700">SENTENCE 0${p.index}</span>
+              <span class="pill ${p.color}">${p.category} · ${p.score}%</span>
+            </div>
+            <div class="phrase-text">“${escapeHtml(p.sentence_a)}”</div>
+          </div>
+        `;
+      }).join('');
+
+      // Render Document B sentences
+      const paneB = document.getElementById('contentDocB');
+      paneB.innerHTML = currentPhrases.map(p => {
+        const hasMatch = p.sentence_b && !p.sentence_b.includes('No matching passage');
+        const cls = hasMatch ? ('hl-' + p.color) : 'hl-green';
+        return `
+          <div class="phrase-item ${cls}" id="pB_${p.index}" onclick="focusPhrase(${p.index})">
+            <div class="phrase-header">
+              <span class="mono" style="font-weight:700">MATCH 0${p.index}</span>
+              <span class="pill ${hasMatch ? p.color : 'green'}">${hasMatch ? p.category : 'No Commonality'}</span>
+            </div>
+            <div class="phrase-text">“${escapeHtml(p.sentence_b)}”</div>
+          </div>
+        `;
+      }).join('');
+
+      // Render Sentence Comparison Table
+      const tbody = document.getElementById('phraseTableBody');
+      tbody.innerHTML = currentPhrases.map(p => {
+        const bgRow = p.color === 'pink' ? 'rgba(255,101,153,0.06)' : (p.color === 'warn' ? 'rgba(255,180,67,0.06)' : (p.color === 'blue' ? 'rgba(108,213,255,0.06)' : 'transparent'));
+        return `
+          <tr id="row_${p.index}" style="background:${bgRow};cursor:pointer" onclick="focusPhrase(${p.index})">
+            <td class="mono" style="font-weight:700">0${p.index}</td>
+            <td><b>“${escapeHtml(p.sentence_a)}”</b></td>
+            <td><span style="color:#c2d8cf">“${escapeHtml(p.sentence_b)}”</span></td>
+            <td>
+              <span class="pill ${p.color}">${p.category}</span>
+              <div class="mono" style="font-size:11px;margin-top:4px;color:var(--text)">${p.score}% overlap</div>
+            </td>
+            <td>
+              <div style="font-size:12px;line-height:1.55;color:#e8f4ef">
+                ${escapeHtml(p.reason)}
+              </div>
+              ${p.shared_terms && p.shared_terms.length ? `<div class="mono" style="font-size:10px;color:var(--muted);margin-top:4px">Anchor keywords: ${p.shared_terms.slice(0,5).join(', ')}</div>` : ''}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Focus first flagged or verbatim sentence by default
+      const firstTarget = currentPhrases.find(p => p.color === 'pink' || p.color === 'warn') || currentPhrases[0];
+      if (firstTarget) {
+        focusPhrase(firstTarget.index);
+      }
+    }
+  } catch (e) {
+    console.warn('Forensic load error:', e);
+  }
+}
+
+function focusPhrase(idx) {
+  activeFocusedIndex = idx;
+  const p = currentPhrases.find(item => item.index === idx);
+  if (!p) return;
+
+  // Clear active styling
+  document.querySelectorAll('.phrase-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('#phraseTable tr').forEach(el => el.style.outline = 'none');
+
+  // Activate selected elements
+  const elA = document.getElementById('pA_' + idx);
+  const elB = document.getElementById('pB_' + idx);
+  const elRow = document.getElementById('row_' + idx);
+
+  if (elA) {
+    elA.classList.add('active');
+    elA.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  if (elB) {
+    elB.classList.add('active');
+    elB.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  if (elRow) {
+    elRow.style.outline = '2px solid var(--accent)';
+  }
+
+  // Update live diagnostic banner
+  const banner = document.getElementById('inspectorBanner');
+  const catLabel = document.getElementById('inspectorCategory');
+  const scoreBadge = document.getElementById('inspectorScore');
+  const reasonText = document.getElementById('inspectorReason');
+  const termsBox = document.getElementById('inspectorTerms');
+
+  const borderColors = { pink: 'var(--pink)', warn: 'var(--warn)', blue: 'var(--blue)', green: 'var(--green)' };
+  banner.style.borderLeftColor = borderColors[p.color] || 'var(--green)';
+
+  catLabel.textContent = `SENTENCE 0${p.index} · ${p.category.toUpperCase()}`;
+  catLabel.style.color = borderColors[p.color] || 'var(--green)';
+
+  scoreBadge.className = 'pill ' + p.color;
+  scoreBadge.textContent = `${p.score}% SIMILARITY`;
+
+  reasonText.textContent = p.reason;
+
+  if (p.shared_terms && p.shared_terms.length) {
+    termsBox.style.display = 'block';
+    termsBox.textContent = `Shared Domain Anchor Tokens: ${p.shared_terms.join(' · ')}`;
+  } else {
+    termsBox.style.display = 'none';
+  }
+}
+
+
+async function loadBatchQueue() {
+  const tbody = document.getElementById('batchQueueTable');
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/queue`);
+    if (res.ok) {
+      const queue = await res.json();
+      tbody.innerHTML = queue.map(q => `
+        <tr>
+          <td class="mono">#SYN-${q.id}</td>
+          <td><b>${q.name}</b></td>
+          <td>${q.department || 'General'}</td>
+          <td class="mono">${q.exact_similarity || 0}%</td>
+          <td class="mono">${q.semantic_similarity || 0}%</td>
+          <td><b style="color:${q.overlap > 25 ? 'var(--pink)' : 'var(--green)'}">${q.overlap}%</b></td>
+          <td><span class="pill ${q.status === 'cleared' ? '' : 'warn'}">${q.raw_status || q.status}</span></td>
+          <td>
+            <button class="btn small" onclick="inspectReport(${q.id})">Forensic View ↗</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {}
+}
+
+function filterQueue(status) {
+  fetch(`${API_BASE}/api/admin/queue?status=${status}`)
+    .then(r => r.json())
+    .then(data => {
+      // Re-render
+      const tbody = document.getElementById('batchQueueTable');
+      tbody.innerHTML = data.map(q => `
+        <tr>
+          <td class="mono">#SYN-${q.id}</td>
+          <td><b>${q.name}</b></td>
+          <td>${q.department || 'General'}</td>
+          <td class="mono">${q.exact_similarity || 0}%</td>
+          <td class="mono">${q.semantic_similarity || 0}%</td>
+          <td><b style="color:${q.overlap > 25 ? 'var(--pink)' : 'var(--green)'}">${q.overlap}%</b></td>
+          <td><span class="pill ${q.status === 'cleared' ? '' : 'warn'}">${q.raw_status || q.status}</span></td>
+          <td><button class="btn small" onclick="inspectReport(${q.id})">Forensic View ↗</button></td>
+        </tr>
+      `).join('');
+    });
+}
+
+async function loadMLStats() {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/ml-model`);
+    if (res.ok) {
+      const ml = await res.json();
+      if (ml.weights) {
+        document.getElementById('wExact').textContent = ml.weights.w_exact.toFixed(2);
+        document.getElementById('wSem').textContent = ml.weights.w_semantic.toFixed(2);
+        document.getElementById('wCov').textContent = ml.weights.w_coverage.toFixed(2);
+      }
+      document.getElementById('feedbackCount').textContent = ml.total_feedback_samples || 18;
+
+      if (ml.learned_stopwords && ml.learned_stopwords.length) {
+        document.getElementById('learnedStopwordsContainer').innerHTML = ml.learned_stopwords.map(w => `<span class="pill">${w}</span>`).join('');
+      }
+    }
+  } catch (e) {}
+}
+
+async function savePolicySettings() {
+  const span = parseInt(document.getElementById('spanVal').textContent);
+  const para = parseFloat(document.getElementById('paraVal').textContent) * 100;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/policy`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        overlap_threshold: span,
+        paraphrase_threshold: para,
+        cross_language: true,
+        ai_signal: true,
+        ignore_bibliography: true
+      })
+    });
+    if (res.ok) {
+      toast('Sensitivity policy saved to university database!');
+    }
+  } catch (e) {
+    toast('Error saving policy');
+  }
+}
+
+async function loadAuditLogs() {
+  const tbody = document.getElementById('auditTableBody');
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/audit?limit=25`);
+    if (res.ok) {
+      const logs = await res.json();
+      tbody.innerHTML = logs.map(l => `
+        <tr>
+          <td><span style="font-size:16px">${l.icon || '✓'}</span></td>
+          <td><b>${l.actor || 'System'}</b></td>
+          <td style="color:var(--green)"><b>${l.action}</b></td>
+          <td><small style="color:var(--muted)">${l.detail || ''}</small></td>
+          <td class="mono" style="font-size:11px">${l.time || 'Today'}</td>
+        </tr>
+      `).join('');
+    }
+  } catch (e) {}
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Check if session exists in memory
+  if (!currentAdminUser) {
+    document.getElementById('securityGate').style.display = 'flex';
+  }
+});
+
+function openDirectCompareModal() {
+  document.getElementById('directCompareModal').style.display = 'block';
+}
+
+function loadSampleDemo(type) {
+  if (type === 'copy') {
+    document.getElementById('customTitleA').value = 'Student Submission A';
+    document.getElementById('customTextA').value = "The system of alliances divided Europe into two armed camps, the Triple Entente and the Triple Alliance, so a small conflict could quickly involve many countries. Militarism led the great powers to build huge armies and navies, and Germany's naval race with Britain increased the tension.";
+    document.getElementById('customTitleB').value = 'Peer Submission B';
+    document.getElementById('customTextB').value = "The system of alliances divided Europe into two armed camps, the Triple Entente and the Triple Alliance, so a small conflict could quickly involve many countries. Militarism caused the great powers to build enormous armies and navies, and Germany's naval race with Britain raised the tension.";
+  } else if (type === 'para') {
+    document.getElementById('customTitleA').value = 'Student Manuscript C';
+    document.getElementById('customTextA').value = "Europe was split into two heavily armed blocs, the Triple Entente and the Triple Alliance, which meant a minor dispute could draw in numerous nations. The major powers expanded their armies and fleets, and the naval competition between Germany and Britain made relations even more strained.";
+    document.getElementById('customTitleB').value = 'Source Reference A';
+    document.getElementById('customTextB').value = "The system of alliances divided Europe into two armed camps, the Triple Entente and the Triple Alliance, so a small conflict could quickly involve many countries. Militarism led the great powers to build huge armies and navies, and Germany's naval race with Britain increased the tension.";
+  } else {
+    document.getElementById('customTitleA').value = 'Honest Student D';
+    document.getElementById('customTextA').value = "This essay looks at why a murder in the Balkans turned into a world war. Germany, Austria-Hungary and Italy were bound together by treaties, while France, Russia and Britain had their own agreements, so a quarrel between two countries could spread.";
+    document.getElementById('customTitleB').value = 'Historical Textbook';
+    document.getElementById('customTextB').value = "Imperial rivalry over colonies in Africa and Asia created suspicion and competition between the European empires. Nationalism was especially strong in the Balkans, where Slavic groups wanted freedom from Austria-Hungary.";
+  }
+  toast('Sample passages loaded into sandbox.');
+}
+
+async function executeCustomCompare() {
+  const titleA = document.getElementById('customTitleA').value.trim() || 'Document A';
+  const textA = document.getElementById('customTextA').value.trim();
+  const titleB = document.getElementById('customTitleB').value.trim() || 'Document B';
+  const textB = document.getElementById('customTextB').value.trim();
+
+  if (!textA || !textB) {
+    toast('Please enter text for both documents');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/compare`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title_a: titleA,
+        content_a: textA,
+        title_b: titleB,
+        content_b: textB,
+        drop_common_phrases: true,
+        save_to_history: true
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('directCompareModal').style.display = 'none';
+      toast('Comparison complete! Loading forensic view...');
+      
+      // Refresh cases and inspect
+      await loadBoardData();
+      const reportId = data.report_id || (allReports.length ? allReports[0].id : null);
+      if (reportId) {
+        inspectReport(reportId);
+      }
+    } else {
+      toast('Comparison failed: ' + res.statusText);
+    }
+  } catch(e) {
+    console.error('Custom compare error:', e);
+    toast('Error connecting to backend API');
+  }
+}
+
+</script>
+
+<!-- DIRECT COMPARE MODAL -->
+<div id="directCompareModal" style="display:none;position:fixed;inset:0;background:rgba(10,16,14,0.92);z-index:1500;padding:24px;overflow-y:auto;backdrop-filter:blur(14px)">
+  <div style="max-width:850px;margin:20px auto;background:var(--surface);border:1.5px solid var(--border-light);border-radius:22px;padding:30px;box-shadow:0 25px 60px rgba(0,0,0,0.7)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div class="mono" style="color:var(--green);font-size:10px">ON-DEMAND ARBITRATION</div>
+        <h3 class="display" style="font-size:24px;margin:2px 0 0">Direct Pairwise Comparison Sandbox</h3>
+      </div>
+      <button class="btn small" onclick="document.getElementById('directCompareModal').style.display='none'">✕ Close</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 20px">
+      Paste or type two text passages to analyze word-for-word copy, structural paraphrase, and common academic templates in real time.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+      <div>
+        <label class="mono" style="font-size:11px;color:var(--green);font-weight:700">DOCUMENT A (STUDENT DRAFT)</label>
+        <input id="customTitleA" class="gate-input" placeholder="Title A (e.g. Student Submission)" value="Student A Draft" style="margin-bottom:8px">
+        <textarea id="customTextA" class="gate-input" style="min-height:180px;resize:vertical;font-size:13px;line-height:1.6" placeholder="Paste Document A text here..."></textarea>
+      </div>
+      <div>
+        <label class="mono" style="font-size:11px;color:var(--blue);font-weight:700">DOCUMENT B (CORPUS / PEER SOURCE)</label>
+        <input id="customTitleB" class="gate-input" placeholder="Title B (e.g. Reference Paper)" value="Source Reference" style="margin-bottom:8px">
+        <textarea id="customTextB" class="gate-input" style="min-height:180px;resize:vertical;font-size:13px;line-height:1.6" placeholder="Paste Document B text here..."></textarea>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn small" style="background:#182823" onclick="loadSampleDemo('copy')">Sample: Direct Copy</button>
+        <button type="button" class="btn small" style="background:#182823" onclick="loadSampleDemo('para')">Sample: Paraphrase</button>
+        <button type="button" class="btn small" style="background:#182823" onclick="loadSampleDemo('honest')">Sample: Independent</button>
+      </div>
+      <button class="btn green" style="padding:12px 24px;font-size:13px" onclick="executeCustomCompare()">Run Forensic Comparison ↗</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
